@@ -107,14 +107,20 @@ class UnixTime(object):
             aux = aux + 1;
         diff = accumulate - self.run(strTime);
         return array;    
+  
+    def diffTimeStamp(self,strTimeVideo, strT2):
+        """
+        Method that calculates difference between video time and arbitrary time
 
-    def diffTimeStamp(self,strT1, strT2):
-        #tstamp1 = self.run("1557779772")#Tempo Video Inicial
-        #tstamp2 = self.run("1557779946")#Tag
-        tstamp1 = self.runGMT(strT1)#Tempo Video Inicial
-        print("TIme: %s" % tstamp1)
-        tstamp2 = self.run(strT2)#Tag
-        print("TIme2: %s" % tstamp2)
+        Parameters
+        ----------
+        strTimeVideo: String
+           video time.
+        strT2: String
+            arbitrary time.
+        """
+        tstamp1 = self.runGMT(strTimeVideo)
+        tstamp2 = self.run(strT2)
 
         if tstamp1 > tstamp2:
             td = tstamp1 - tstamp2
