@@ -203,7 +203,7 @@ class FlowChartGame(QtGui.QMainWindow):
                     videoSC = file;
                 elif(self.is_video_file(filename) and ("WC") in filename):
                     videoWC = file;   
-                elif(filename == 'tagVideo.txt'):                    
+                elif(filename == 'timevideo.csv'):                    
                     tagFileVideo = file;
                 elif(filename == 'tags.csv'):                    
                     tagFile = file;
@@ -512,8 +512,6 @@ class FlowChartGame(QtGui.QMainWindow):
             timeLabel.setText("Error: " + self.mediaPlayer.errorString())
             
     def updateRangerSlider(self):
-        #td_second = UnixTime().diffTimeStamp(timeTagInitial, timeTagEnd)
-        #print('The difference is approx between Tags . %s ms' % (td_second*1000))
         positionRangeSlider.setMin(0)
         positionRangeSlider.setMax(len(ts) - 1)
         positionRangeSlider.setRange(0, len(ts) - 1)

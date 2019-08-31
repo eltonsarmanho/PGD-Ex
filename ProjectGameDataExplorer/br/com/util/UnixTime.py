@@ -27,6 +27,18 @@ class UnixTime(object):
         #return datetime.utcfromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S');
         return datetime.fromtimestamp(ts);
     
+    def runGMT(self,strTime):
+        #ts = int("1284101485")
+        ts = float(strTime)
+
+        # if you encounter a "year is out of range" error the timestamp
+        # may be in milliseconds, try `ts /= 1000` in that case
+        #dt = datetime.fromtimestamp(ts).strftime('%H:%M:%S');
+        #print(dt)
+        #print(datetime.fromtimestamp(ts) + timedelta(seconds=1/4))
+        return datetime.utcfromtimestamp(ts)
+        #return datetime.fromtimestamp(ts);
+    
     def time_array(self,strTime,count,samplingRate):
         aux = 0;
         array = []
@@ -99,9 +111,11 @@ class UnixTime(object):
     def diffTimeStamp(self,strT1, strT2):
         #tstamp1 = self.run("1557779772")#Tempo Video Inicial
         #tstamp2 = self.run("1557779946")#Tag
-        tstamp1 = self.run(strT1)#Tempo Video Inicial
+        tstamp1 = self.runGMT(strT1)#Tempo Video Inicial
+        print("TIme: %s" % tstamp1)
         tstamp2 = self.run(strT2)#Tag
-        
+        print("TIme2: %s" % tstamp2)
+
         if tstamp1 > tstamp2:
             td = tstamp1 - tstamp2
         else:

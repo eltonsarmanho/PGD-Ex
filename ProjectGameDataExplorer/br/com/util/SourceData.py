@@ -37,7 +37,7 @@ class SourceData:
             
         #df['Time'] = ut.getTimeElapsed(dates_list); 
         df['Time'] = (dates_list); 
-        df['Neutral'] = ((np.array(frame['Neutral']).astype(float))) ;
+        df['Neutral'] = ((np.array(frame['neutral']).astype(float))) ;
         df['Happiness'] = (np.array(frame['happiness']).astype(float)) ;
         df['Sadness'] = (np.array(frame['sadness']).astype(float)) ;
         df['Anger'] = (np.array(frame['anger']).astype(float)) ;
