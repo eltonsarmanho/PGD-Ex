@@ -6,7 +6,7 @@ class ProcessingData:
     def __init__(self):
         pass;
     
-    def normalizeEDA(self,myarray):
+    def normalize(self,myarray):
         
         arrayNormalized = myarray;
         max_value = max(myarray);

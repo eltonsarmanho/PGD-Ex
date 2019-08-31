@@ -195,7 +195,7 @@ class FlowChartGame(QtGui.QMainWindow):
             for file in filenames:
                 filename = os.path.basename(file)               
                 
-                if(not(self.is_video_file(filename) or filename.endswith('.csv') or filename.endswith('.txt'))):
+                if(not(self.is_video_file(filename) or filename.endswith('.csv'))):
                     QMessageBox.information(self, "Message", "No appropriate file Located");
                     return False;
                 
@@ -262,7 +262,7 @@ class FlowChartGame(QtGui.QMainWindow):
             return True;
     
         except IOError:
-            print('An error occured trying to read the file.')
+            print('An error occurred trying to read the file.')
             
         except ValueError:
             print('Non-numeric data found in the file.')
@@ -277,7 +277,7 @@ class FlowChartGame(QtGui.QMainWindow):
             print('You cancelled the operation.')
         
         except:            
-            QMessageBox.information(self, "Message", "An error occured")
+            QMessageBox.information(self, "Message", "An error occurred")
      
     def setTags(self,path):
        
@@ -680,7 +680,8 @@ class FlowChartGame(QtGui.QMainWindow):
 
         axis = DateAxis(orientation='bottom')
         axis.attachToPlotItem(pwEDA.getPlotItem())
-        plot.setData(x= ts,y=filtered_eda)
+        normalize_data_eda = ProcessingData().normalize(filtered_eda)
+        plot.setData(x= ts,y=normalize_data_eda)
         
         pwEDA.setMouseEnabled(x=False, y=False)
         for peak in peaks:
@@ -709,7 +710,7 @@ class FlowChartGame(QtGui.QMainWindow):
         timeHR = [datetime.timestamp(dt) for dt in df['timeHR']]
        
         #plot = pwHR.plot(title="HR", pen='r',symbol='o')
-        plot = pwHR.plot(title="HR", pen='r',symbol='o')
+        plot = pwHR.plot(title="HR", pen='r')
         pwHR.getPlotItem().addLegend()
         pwHR.addItem(pg.PlotDataItem(pen='r', name='HR Value', antialias=False))
         pwHR.getPlotItem().getViewBox().setMouseMode(pg.ViewBox.RectMode)
@@ -717,7 +718,8 @@ class FlowChartGame(QtGui.QMainWindow):
         axis = DateAxis(orientation='bottom')
         axis.attachToPlotItem(pwHR.getPlotItem())
         
-        plot.setData(x=timeHR, y=hr)
+        normalize_data_hr = ProcessingData().normalize(df['hr'])
+        plot.setData(x=timeHR, y=normalize_data_hr.tolist())
         pwHR.setMouseEnabled(x=False, y=False)
         
         plot = pwHR.plot(title="HRV", pen='b')
@@ -726,7 +728,8 @@ class FlowChartGame(QtGui.QMainWindow):
         RRI_DF = EmpaticaHRV().getRRI(filteredBVP, timeTagInitial, 64)
         HRV_DF = EmpaticaHRV().getHRV(RRI_DF, np.mean(hr))
         timeHR = HRV_DF['Timestamp'].tolist()
-        plot.setData(x=timeHR, y=HRV_DF['HRV'].tolist())
+        normalize_data_hrv = ProcessingData().normalize(HRV_DF['HRV'])
+        plot.setData(x=timeHR, y=normalize_data_hrv.tolist())
        
         self.lrHR = pg.LinearRegionItem([timeHR[0], timeHR[len(timeHR)-1]],
                                         bounds=[timeHR[0], timeHR[len(timeHR)-1]])  
@@ -827,9 +830,7 @@ class FlowChartGame(QtGui.QMainWindow):
             self.lrBVP.setRegion([indexInitial,indexEnd])            
         if(self.isCreatedPlotHR):
             self.lrHR.setRegion([indexInitial,indexEnd]) 
-           
-        
-    
+       
     def is_video_file(self,filename):
         video_file_extensions = (
 '.264', '.3g2', '.3gp', '.3gp2', '.3gpp', '.3gpp2', '.3mm', '.3p2', '.60d', '.787', '.avi', '.dv-avi', 
