@@ -517,7 +517,7 @@ class FlowChartGame(QtGui.QMainWindow):
            
     def positionChanged(self, position):       
         if self.mediaPlayer.state() == QMediaPlayer.PlayingState:
-            print("positionChanged: Position:: %s" % position)
+            #print("positionChanged: Position:: %s" % position)
             #if(position>=positionInitialSession):
             positionRangeSlider.setStart(position)
             self.addLinearRegionInPlotWidget()
