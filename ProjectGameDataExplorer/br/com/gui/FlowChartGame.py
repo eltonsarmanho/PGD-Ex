@@ -517,7 +517,7 @@ class FlowChartGame(QtGui.QMainWindow):
            
     def positionChanged(self, position):       
         if self.mediaPlayer.state() == QMediaPlayer.PlayingState:
-            #print("positionChanged: Position:: %s" % position)
+            print("positionChanged: Position:: %s" % position)
             #if(position>=positionInitialSession):
             positionRangeSlider.setStart(position)
             self.addLinearRegionInPlotWidget()
@@ -574,6 +574,8 @@ class FlowChartGame(QtGui.QMainWindow):
             self.setPositionInPlayer(positionInitialSession)
             time = self.loadingTimeProgressaBar(0,0)
             self.changedLabelTime(time)
+            self.clearLinearRegion()
+
         elif(index-positionInitialSession >= 0):
             time = self.loadingTimeProgressaBar(index-positionInitialSession,
                                                 positionEndSession-positionRangeSlider.end())
@@ -749,28 +751,31 @@ class FlowChartGame(QtGui.QMainWindow):
             return False;
  
     def clearLinearRegion(self):
-        indexInitial = ts[0];
-        indexEnd = ts[0]
+        ut = UnixTime();
+
+        indexInitial = datetime.timestamp(ut.time_inc(timeTagInitial,0))
              
         if(self.isCreatedPlotEda):          
             #pwEDA.removeItem(self.lrEDA)           
-            self.lrEDA.setRegion([indexInitial,indexEnd])
+            self.lrEDA.setRegion([indexInitial,indexInitial])
         if(self.isCreatedPlotBVP):
-            self.lrBVP.setRegion([indexInitial,indexEnd])  
+            self.lrBVP.setRegion([indexInitial,indexInitial])  
         if(self.isCreatedPlotHR):
-            self.lrHR.setRegion([indexInitial,indexEnd]) 
+            self.lrHR.setRegion([indexInitial,indexInitial]) 
             
     def addLinearRegionInPlotWidget(self):
-        ut = UnixTime();
-        indexInitial = datetime.timestamp(ut.time_inc(timeTagInitial, 
-                                                      positionRangeSlider.start()-positionInitialSession))
-        indexEnd =  datetime.timestamp(ut.time_reduce(timeTagEnd, positionEndSession-positionRangeSlider.end()))
-        if(self.isCreatedPlotEda):          
-            self.lrEDA.setRegion([indexInitial,indexEnd])
-        if(self.isCreatedPlotBVP):
-            self.lrBVP.setRegion([indexInitial,indexEnd])            
-        if(self.isCreatedPlotHR):
-            self.lrHR.setRegion([indexInitial,indexEnd]) 
+        if self.mediaPlayer.state() != QMediaPlayer.PausedState:
+
+            ut = UnixTime();
+            indexInitial = datetime.timestamp(ut.time_inc(timeTagInitial, 
+                                                          positionRangeSlider.start()-positionInitialSession))
+            indexEnd =  datetime.timestamp(ut.time_reduce(timeTagEnd, positionEndSession-positionRangeSlider.end()))
+            if(self.isCreatedPlotEda):          
+                self.lrEDA.setRegion([indexInitial,indexEnd])
+            if(self.isCreatedPlotBVP):
+                self.lrBVP.setRegion([indexInitial,indexEnd])            
+            if(self.isCreatedPlotHR):
+                self.lrHR.setRegion([indexInitial,indexEnd]) 
        
     def is_video_file(self,filename):
         video_file_extensions = (

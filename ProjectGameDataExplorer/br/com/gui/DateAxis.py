@@ -84,8 +84,8 @@ class DateAxis(pg.AxisItem):
                 majticks.append(mktime(dt.timetuple()))
                 dt += d
 
-        elif dx > 120:  # 60s*2 = 2 minutes
-            d = timedelta(seconds=20)
+        elif dx > 120:  # 60s*2 = 2 minutes [Para casso de sessões curtas]
+            d = timedelta(seconds=30)
             dt = dt1.replace(second=0, microsecond=0) + d
             while dt < dt2:
                 majticks.append(mktime(dt.timetuple()))
