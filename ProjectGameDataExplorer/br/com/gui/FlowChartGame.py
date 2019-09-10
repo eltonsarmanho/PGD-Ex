@@ -14,6 +14,8 @@ import sys, os
 import matplotlib
 from br.com.analytic.reduceFeatures.ReduceEmotion import ReduceEmotion
 from br.com.gui.TableView import TableView
+from theano.ifelse import ifelse
+from numba.tests.test_nested_calls import star
 matplotlib.use('Agg')
 
 from br.com.util.SourceData import SourceData
@@ -48,8 +50,8 @@ class FlowChartGame(QtGui.QMainWindow):
 
         pg.setConfigOption('background', 'w')
         pg.setConfigOption('foreground', 'k')
-        global  timer;
-        timer = QtCore.QTimer(self)
+        #global  timer;
+        #timer = QtCore.QTimer(self)
         
         self.createMediaPlayer();
         self.windowPlots()
@@ -60,6 +62,7 @@ class FlowChartGame(QtGui.QMainWindow):
         self.mediaPlayer2 = QMediaPlayer(None, QMediaPlayer.VideoSurface)       
         self.mediaPlayer.stateChanged.connect(self.mediaStateChanged)       
         self.mediaPlayer.durationChanged.connect(self.durationChanged)
+        self.mediaPlayer.positionChanged.connect(self.positionChanged)
         self.mediaPlayer.error.connect(self.handleError)
         try:
             self.splitter.setSizes([1000, 200])
@@ -136,9 +139,9 @@ class FlowChartGame(QtGui.QMainWindow):
             self.tv.show()
            
         elif(q.text() == "Reset Progress Bar Timer"):
-            if(timer.isActive()):
-                timer.stop()                  
-                timer.timeout.disconnect(self.eventUpdateTimeLine)
+            #if(timer.isActive()):
+            #    timer.stop()                  
+            #    timer.timeout.disconnect(self.eventUpdateTimeLine)
             self.mediaPlayer.pause()
             self.mediaPlayer2.pause()  
             self.durationChanged(0)
@@ -165,12 +168,9 @@ class FlowChartGame(QtGui.QMainWindow):
     def loadingVisualization(self,enableVideo):
         if(self.plottingGraphics(enableVideo)):
             self.updateRangerSlider()            
-            self.updateSpinnerOfTime()
             positionRangeSlider.endValueChanged.connect(self.eventChangeRightRangeValue)
             positionRangeSlider.startValueChanged.connect(self.eventChangeLeftRangeValue)
-            initialTimeEdit.timeChanged.connect(self.eventChangeTimeSpinner1)
-            endTimeEdit.timeChanged.connect(self.eventChangeTimeSpinner2)
-    
+
     def plottingGraphics(self, showVideo=None):
                
         dlg = QtGui.QFileDialog()       
@@ -188,7 +188,6 @@ class FlowChartGame(QtGui.QMainWindow):
             videoWC = ""
             fileBVP = ""
             fileEDA = ""
-            fileHR  = ""
             fileEmotion = ""
             tagFileVideo = ""
             tagFile = ""
@@ -209,8 +208,7 @@ class FlowChartGame(QtGui.QMainWindow):
                     tagFile = file;
                 elif filename == 'BVP.csv':
                     fileBVP = file;
-                elif filename == 'HR.csv':
-                    fileHR = file;
+                
                 elif filename == 'EDA.csv':
                     fileEDA = file; 
                 elif ("EMOCAO") in filename:
@@ -283,13 +281,26 @@ class FlowChartGame(QtGui.QMainWindow):
        
         global timeTagEnd;
         global timeTagInitial;
+        global durantionSession;
         
+
         try:
             sd = SourceData()
             tags = sd.LoadDataTags(path)
-            if(len(tags)==2):
-                timeTagEnd = tags[1];
-                timeTagInitial = tags[0];
+            if(len(tags) % 2 == 1  ):
+                QMessageBox.information(self, "Message", "There is only one Tag");
+                print("There is only one Tag");
+                sys.exit(app.exec_());   
+            elif (len(tags) % 2 == 0 ):
+                timeTagsInitial = tags[0::2];
+                timeTagsEnd = tags[1::2];
+                #Popup para escolher Tags
+                
+                timeTagInitial = timeTagsInitial[0];
+                timeTagEnd = timeTagsEnd[0];
+                durantionSession = UnixTime().diffTimeStampTags(timeTagInitial, timeTagEnd)    
+                self.loadingTimeProgressaBar(0,0)
+                
             else: 
                 QMessageBox.information(self, "Message", "There should be two Tags");
                 print("There should be two Tags");
@@ -298,12 +309,22 @@ class FlowChartGame(QtGui.QMainWindow):
             print("Erro during Loading Tags")
             sys.exit(app.exec_());
     
+    def loadingTimeProgressaBar(self,shiftLeft,shiftRight):
+        ut = UnixTime();
+        timeLeft =  ut.time_inc(timeTagInitial, shiftLeft)   
+        timeRight = ut.time_reduce(timeTagEnd, shiftRight)     
+        time =  '{} / {}'.format(timeLeft.strftime('%H:%M:%S'),timeRight.strftime('%H:%M:%S'))
+        timeProgressBar.setText(time)
+        return time;
+    
     def setTagVideo(self,path):
         global timeVideo;
-      
+        global positionInitialSession
         try:
             f = open(path, "r")
             timeVideo = float(f.read());
+            positionInitialSession = UnixTime().diffTimeStamp(timeVideo,timeTagInitial)*1000  
+            
         except:
             QMessageBox.information(self, "Message", "Erro during Loading Video Tag");
 
@@ -370,9 +391,11 @@ class FlowChartGame(QtGui.QMainWindow):
     def uiTimeBar(self):
                
         global positionRangeSlider;
-        global initialTimeEdit;
-        global endTimeEdit;
+        global timeProgressBar;
+    
         global btPlayer;
+        
+        
         positionRangeSlider = QRangeSlider()
     
         positionRangeSlider.handle.setTextColor(150)
@@ -384,30 +407,25 @@ class FlowChartGame(QtGui.QMainWindow):
         btPlayer.setCheckable(True)
         btPlayer.clicked.connect(lambda:self.eventBtstate(btPlayer))
         
-        editsTimeLayout = QtGui.QVBoxLayout()        
-        initialTimeLabel = QtGui.QLabel()
-        # initialTimeEdit = QtGui.QTimeEdit(QTime.currentTime())
-        initialTimeEdit = TimeWidget(QTime.currentTime)
-        initialTimeEdit.setWrapping(True)
-        initialTimeEdit.setDisplayFormat('hh:mm:ss');
-        initialTimeLabel.setText("Initial time")
-        editsTimeLayout.addWidget(initialTimeLabel)
-        editsTimeLayout.addWidget(initialTimeEdit)        
-        endTimeLabel = QtGui.QLabel()
-        endTimeEdit = TimeWidget(QTime.currentTime)
-        endTimeEdit.setWrapping(True)
-        endTimeEdit.setDisplayFormat('hh:mm:ss');
-        endTimeLabel.setText("End time")
-        editsTimeLayout.addWidget(endTimeLabel)
-        editsTimeLayout.addWidget(endTimeEdit)
+        editsTimeLayout = QtGui.QHBoxLayout()        
+        timeProgressBar = QtGui.QLabel()
         
+        timeProgressBar.setText("00:00:00/00:00:00")
+        timeProgressBar.setSizePolicy(QtGui.QSizePolicy.Preferred,
+                QtGui.QSizePolicy.Maximum)    
+        editsTimeLayout.addStretch()    
+        editsTimeLayout.addWidget(timeProgressBar)
+        #editsTimeLayout.addStretch()
         
         vbox = QtGui.QHBoxLayout()
         vbox.addWidget(btPlayer)
         vbox.addWidget(positionRangeSlider)
-        vbox.addLayout(editsTimeLayout)
-         
-        return vbox;
+        
+        
+        box = QtGui.QVBoxLayout()
+        box.addLayout(vbox)
+        box.addLayout(editsTimeLayout)
+        return box;
 
     def uiPanelVideo(self):
         print("uiPanelVideo")
@@ -468,13 +486,15 @@ class FlowChartGame(QtGui.QMainWindow):
             
     def play(self):
         try:
-            if  self.ShowVideo:
-                if self.mediaPlayer.state() == QMediaPlayer.PlayingState:
-                    self.mediaPlayer.pause();
-                    self.mediaPlayer2.pause()
-                else:
-                    self.mediaPlayer2.play()
-                    self.mediaPlayer.play() 
+           
+            if self.mediaPlayer.state() == QMediaPlayer.PlayingState:
+                self.mediaPlayer.pause();
+                self.mediaPlayer2.pause()
+            else:
+                positionRangeSlider.setMoved(False) 
+                self.mediaPlayer2.play()
+                self.mediaPlayer.play()
+                
         except: 
             print("No media player") 
                 
@@ -490,171 +510,90 @@ class FlowChartGame(QtGui.QMainWindow):
         except: 
             print("No media player");
             
-    def positionChangedString(self, str):  
+    def changedLabelTime(self, str):  
         if  self.ShowVideo:     
             timeLabel.setText("Time: " + str)
             timeLabel2.setText("Time: " + str)   
            
-    def durationChanged(self, duration):       
-        if  self.ShowVideo:
-            position = UnixTime().diffTimeStamp(timeVideo,timeTagInitial)    
-            #start Point of the  PlayTest on video 
-            self.setPosition(position*1000)
+    def positionChanged(self, position):       
+        if self.mediaPlayer.state() == QMediaPlayer.PlayingState:
+            #print("positionChanged: Position:: %s" % position)
+            #if(position>=positionInitialSession):
+            positionRangeSlider.setStart(position)
+            self.addLinearRegionInPlotWidget()
+
+    def durationChanged(self, duration):  
+        print("Duration Video in miliseconds: %s" % duration)
+        self.setPositionInPlayer(positionInitialSession)
      
-    def setPosition(self, position):
-        if  self.ShowVideo:
-            self.mediaPlayer.setPosition(position)
-            self.mediaPlayer2.setPosition(position)
+    def setPositionInPlayer(self, position):
+        #print("setPositionInPlayer")
+        self.mediaPlayer.setPosition(position)
+        self.mediaPlayer2.setPosition(position)
 
     def handleError(self):
         #selfm.playButton.setEnabled(False)
-        if  self.ShowVideo:
-            timeLabel.setText("Error: " + self.mediaPlayer.errorString())
+        timeLabel.setText("Error: " + self.mediaPlayer.errorString())
             
     def updateRangerSlider(self):
-        positionRangeSlider.setMin(0)
-        positionRangeSlider.setMax(len(ts) - 1)
-        positionRangeSlider.setRange(0, len(ts) - 1)
+        global positionEndSession;
+        positionEndSession = positionInitialSession+durantionSession;
+        print("Duration session in miliseconds: %s" % (durantionSession))
+        print("Initial Point: %s" % positionInitialSession)
+        print("End Point: %s"% (positionEndSession))
+        positionRangeSlider.setMin(positionInitialSession)
+        positionRangeSlider.setMax(positionEndSession)
+        positionRangeSlider.setRange(positionInitialSession,positionEndSession)
     
-    def updateSpinnerOfTime(self):
-        print("updateSpinnerOfTime::")
-      
-        hours, minutes, seconds = self.getTimeDetails(datetime.fromtimestamp(float(timeTagInitial)))
-        dt1 = QTime(hours, minutes, seconds);
-        
-        hours, minutes, seconds = self.getTimeDetails(datetime.fromtimestamp(float(timeTagEnd)))
-        dt2 = QTime(hours, minutes, seconds);
-        initialTimeEdit.setTime(dt1)
-        initialTimeEdit.setTimeRange(dt1, dt2)
-
-        endTimeEdit.setTime(dt2)
-        endTimeEdit.setTimeRange(dt1, dt2)
-    
-    def eventChangeTimeSpinner1(self, time):
-               
-        positionRangeSlider.startValueChanged.disconnect(self.eventChangeLeftRangeValue)
-        positionRangeSlider.endValueChanged.disconnect(self.eventChangeRightRangeValue)
-        
-        t = datetime.strptime(str(time.toPyTime()), "%H:%M:%S")
-       
-        ###########
-        dt_experiment = datetime.fromtimestamp(ts[0]);
-        newdate = t.replace(year=dt_experiment.year, month=dt_experiment.month, day=dt_experiment.day)
-       
-        newtime = datetime.timestamp(newdate);  # Update with date and time of the experiment
-        #print("NT (%s)" % newtime)
-        array = ts;
-
-        try: 
-            if(newtime in array and (endTimeEdit.time()!=initialTimeEdit.time())):
-                #Update Video
-                if  self.ShowVideo:
-                    if not self.mediaPlayer.state() == QMediaPlayer.PlayingState:
-                        p = UnixTime().diffTimeStamp(timeVideo,newtime)          
-                        self.setPosition( p*1000)         
-                #update Range Slider
-                positionRangeSlider.setRange(array.index(newtime), positionRangeSlider.getRange()[1])
-                self.addLinearRegionInPlotWidget()
-                
-            else:  
-                if(timer.isActive()):
-                    timer.stop()                  
-                    timer.timeout.disconnect(self.eventUpdateTimeLine)
-                if  self.mediaPlayer != None:
-                    self.mediaPlayer.pause()
-                    self.mediaPlayer2.pause()
-                    self.durationChanged(0)
-                #Update Progress Bar and Spinner
-                positionRangeSlider.startValueChanged.connect(self.eventChangeLeftRangeValue)
-                positionRangeSlider.endValueChanged.connect(self.eventChangeRightRangeValue)
-                self.updateRangerSlider()
-                self.updateSpinnerOfTime()
-                btPlayer.setChecked(False);
-                self.clearLinearRegion()
-                return ;
-            
-            
-        except ValueError: 
-            print("Nao existe index para: %s" % newtime)      
-       
-        positionRangeSlider.startValueChanged.connect(self.eventChangeLeftRangeValue)
-        positionRangeSlider.endValueChanged.connect(self.eventChangeRightRangeValue)
-          
-    def eventChangeTimeSpinner2(self, time):
-        #print("eventChangeTimeSpinner2::")
-        positionRangeSlider.startValueChanged.disconnect(self.eventChangeLeftRangeValue)
-        positionRangeSlider.endValueChanged.disconnect(self.eventChangeRightRangeValue)
-        
-        
-        t = datetime.strptime(str(time.toPyTime()), "%H:%M:%S")
-        dt_experiment = datetime.fromtimestamp(ts[0]);
-        newdate = t.replace(year=dt_experiment.year, month=dt_experiment.month, day=dt_experiment.day)
-        newtime = datetime.timestamp(newdate);  # Update with date and time of the experiment
-        array = ts;
-        
-        
-        if(newtime in array):
-            positionRangeSlider.setRange(positionRangeSlider.getRange()[0], array.index(newtime))       
-            self.addLinearRegionInPlotWidget()
-
-        positionRangeSlider.startValueChanged.connect(self.eventChangeLeftRangeValue)
-        positionRangeSlider.endValueChanged.connect(self.eventChangeRightRangeValue)
-                                          
+                                              
     def eventChangeRightRangeValue(self, index):
-        #print("eventChangeRightRangeValue")
-        endTimeEdit.timeChanged.disconnect(self.eventChangeTimeSpinner2)
-        initialTimeEdit.timeChanged.disconnect(self.eventChangeTimeSpinner1)
         
-        hours, minutes, seconds = self.getTimeDetails(datetime.fromtimestamp(float(ts[index])))
-        t = QTime(hours, minutes, seconds);  
-        
-        endTimeEdit.setTime(t)        
-        self.addLinearRegionInPlotWidget()
-        
-        endTimeEdit.timeChanged.connect(self.eventChangeTimeSpinner2)
-        initialTimeEdit.timeChanged.connect(self.eventChangeTimeSpinner1)
+        #print("eventChangeRightRangeValue : %s - %s" % (index,positionEndSession))
+        if(index <= positionRangeSlider.start()):
+            time = self.loadingTimeProgressaBar(0,0)
+            self.changedLabelTime(time)
+        elif ((positionEndSession-index) >= 0):
+            time = self.loadingTimeProgressaBar(positionRangeSlider.start()-positionInitialSession,
+                                                positionEndSession-index)
+            self.changedLabelTime(time)
+        if(positionRangeSlider.getMoved()):
+            if self.mediaPlayer.state() == QMediaPlayer.PlayingState:
+                self.mediaPlayer.pause();
+                self.mediaPlayer2.pause()
+            
+            self.setPositionInPlayer(positionRangeSlider.start())
+         
     
     def eventChangeLeftRangeValue(self, index):
-        #print("eventChangeLeftRangeValue")
-        endTimeEdit.timeChanged.disconnect(self.eventChangeTimeSpinner2)
-        initialTimeEdit.timeChanged.disconnect(self.eventChangeTimeSpinner1)
-       
-        t = ts[index]        
-        #Update Video
-        if  self.ShowVideo:
-            p = UnixTime().diffTimeStamp(timeVideo,t)          
-            self.setPosition(p*1000)
-        ###########
-        
-        hours, minutes, seconds = self.getTimeDetails(datetime.fromtimestamp(float(t)))
-        t = QTime(hours, minutes, seconds);  
-        initialTimeEdit.setTime(t)
-        
-        self.addLinearRegionInPlotWidget()
-       
-        endTimeEdit.timeChanged.connect(self.eventChangeTimeSpinner2)
-        initialTimeEdit.timeChanged.connect(self.eventChangeTimeSpinner1)
+        #print("eventChangeLeftRangeValue: %s - %s = %s" % (index,positionInitialSession,(index-positionInitialSession)))
+        #print(positionRangeSlider.getMoved())
+        if(index >= positionRangeSlider.end()):
+            positionRangeSlider.setRange(positionInitialSession,positionEndSession)
+            self.mediaPlayer.pause();
+            self.mediaPlayer2.pause();
+            self.setPositionInPlayer(positionInitialSession)
+            time = self.loadingTimeProgressaBar(0,0)
+            self.changedLabelTime(time)
+        elif(index-positionInitialSession >= 0):
+            time = self.loadingTimeProgressaBar(index-positionInitialSession,
+                                                positionEndSession-positionRangeSlider.end())
+            self.changedLabelTime(time)
+        if(positionRangeSlider.getMoved()):
+            if self.mediaPlayer.state() == QMediaPlayer.PlayingState:
+                self.mediaPlayer.pause();
+                self.mediaPlayer2.pause();           
+            self.setPositionInPlayer(index)
             
     def eventBtstate(self, b):
         
         if b.isChecked():
             print ("Pressed Play") 
-            timer.timeout.connect(self.eventUpdateTimeLine) 
-            timer.start(1000)
             self.play()
            
         else:
             print ("Pressed Pause")
-            timer.stop()
-            self.play()
-            timer.timeout.disconnect(self.eventUpdateTimeLine)
-    
-    def eventUpdateTimeLine(self):
-        t = initialTimeEdit.time().addSecs(1);
-        #self.setPosition(1000)
-        initialTimeEdit.setTime(t) 
-        time = initialTimeEdit.time()       
-        self.positionChangedString(str(time.toPyTime()))
+            positionRangeSlider.setMoved(False)
+            self.play()                   
              
     def PlotEda(self, path):    
         print("PlotEda")   
@@ -822,8 +761,10 @@ class FlowChartGame(QtGui.QMainWindow):
             self.lrHR.setRegion([indexInitial,indexEnd]) 
             
     def addLinearRegionInPlotWidget(self):
-        indexInitial = ts[positionRangeSlider.start()];
-        indexEnd = ts[positionRangeSlider.end() - 1]
+        ut = UnixTime();
+        indexInitial = datetime.timestamp(ut.time_inc(timeTagInitial, 
+                                                      positionRangeSlider.start()-positionInitialSession))
+        indexEnd =  datetime.timestamp(ut.time_reduce(timeTagEnd, positionEndSession-positionRangeSlider.end()))
         if(self.isCreatedPlotEda):          
             self.lrEDA.setRegion([indexInitial,indexEnd])
         if(self.isCreatedPlotBVP):

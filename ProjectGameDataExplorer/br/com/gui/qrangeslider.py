@@ -1,5 +1,6 @@
 import sys, os
 from PyQt5 import QtCore, QtGui, QtWidgets
+from statsmodels.tsa.statespace.tests.test_pickle import true
 
 __all__ = ['QRangeSlider']
 
@@ -66,7 +67,8 @@ class Ui_Form(object):
     def retranslateUi(self, Form):
         _translate = QtCore.QCoreApplication.translate
         Form.setWindowTitle(_translate("QRangeSlider", "QRangeSlider"))
-
+    
+    
 
 class Element(QtWidgets.QGroupBox):
     def __init__(self, parent, main):
@@ -92,7 +94,7 @@ class Element(QtWidgets.QGroupBox):
         if self.main.drawValues():
             self.drawText(event, qp)
         qp.end()
-
+  
 
 class Head(Element):
     def __init__(self, parent, main):
@@ -103,7 +105,8 @@ class Head(Element):
         qp.setFont(QtGui.QFont('Arial', 10))
         qp.drawText(event.rect(), QtCore.Qt.AlignLeft, str(self.main.min()))
 
-
+    
+        
 class Tail(Element):
     def __init__(self, parent, main):
         super(Tail, self).__init__(parent, main)
@@ -112,7 +115,9 @@ class Tail(Element):
         qp.setPen(self.textColor())
         qp.setFont(QtGui.QFont('Arial', 10))
         qp.drawText(event.rect(), QtCore.Qt.AlignRight, str(self.main.max()))
-
+    
+        #movedCondition  = True;
+        #return movedCondition;
 
 class Handle(Element):
     def __init__(self, parent, main):
@@ -124,6 +129,8 @@ class Handle(Element):
         qp.drawText(event.rect(), QtCore.Qt.AlignLeft, str(self.main.start()))
         qp.drawText(event.rect(), QtCore.Qt.AlignRight, str(self.main.end()))
 
+
+        
     def mouseMoveEvent(self, event):
         event.accept()
         mx = event.globalX()
@@ -156,10 +163,10 @@ class QRangeSlider(QtWidgets.QWidget, Ui_Form):
     maxValueChanged = QtCore.pyqtSignal(int)
     startValueChanged = QtCore.pyqtSignal(int)
     endValueChanged = QtCore.pyqtSignal(int)
-
+    
     _SPLIT_START = 1
     _SPLIT_END = 2
-
+    isMoved = False;
     def __init__(self, parent=None):
         super(QRangeSlider, self).__init__(parent)
         self.setupUi(self)
@@ -189,7 +196,13 @@ class QRangeSlider(QtWidgets.QWidget, Ui_Form):
         self.setStart(0)
         self.setEnd(99)
         self.setDrawValues(False)
+        
+    
 
+    def getMoved(self):
+        return self.isMoved;
+    def setMoved(self,value):
+        self.isMoved = value   
     def min(self):
         return getattr(self, '__min', None)
 
@@ -274,6 +287,7 @@ class QRangeSlider(QtWidgets.QWidget, Ui_Form):
         return scale(xpos, (0, self.width()), (self.min(), self.max()))
 
     def _handleMoveSplitter(self, xpos, index):
+        self.setMoved(True)
         hw = self._splitter.handleWidth()
         def _lockWidth(widget):
             width = widget.size().width()

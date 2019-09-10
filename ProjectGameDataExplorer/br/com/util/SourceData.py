@@ -133,7 +133,6 @@ class SourceData:
         for item in e3data.data:
             
             dataset_array.append((item[0])) 
-        
         return (dataset_array); 
     
     

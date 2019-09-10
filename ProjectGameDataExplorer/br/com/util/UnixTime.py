@@ -57,10 +57,13 @@ class UnixTime(object):
         return array[len(array)-1],array;
     
     def time_inc(self,strTime,value):
-        aux = 0;
-        array = []
         dt = self.run(strTime)
         accumulate = dt+timedelta(seconds=int(value/1000));
+        return accumulate;
+    
+    def time_reduce(self,strTime,value):
+        dt = self.run(strTime)
+        accumulate = dt-timedelta(seconds=int(value/1000));
         return accumulate;
     
     def timeFrom(self,strTime,arraySecond):
@@ -128,6 +131,27 @@ class UnixTime(object):
             td = tstamp2 - tstamp1
         td_seconds = int(round(td.total_seconds()))
         return td_seconds;
+    
+    def diffTimeStampTags(self,strT1, strT2):
+        """
+        Method that calculates difference between video time and arbitrary time
+
+        Parameters
+        ----------
+        strTimeVideo: String
+           video time.
+        strT2: String
+            arbitrary time.
+        """
+        tstamp1 = self.run(strT1)
+        tstamp2 = self.run(strT2)
+
+        if tstamp1 > tstamp2:
+            td = tstamp1 - tstamp2
+        else:
+            td = tstamp2 - tstamp1
+        td_seconds = int(round(td.total_seconds()))
+        return td_seconds*1000;
 
 if __name__ == '__main__':
     ut = UnixTime();
