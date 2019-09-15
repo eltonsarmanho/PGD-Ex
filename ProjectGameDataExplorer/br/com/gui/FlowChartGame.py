@@ -864,7 +864,7 @@ if __name__ == '__main__':
 
     if sys.flags.interactive != 1 or not hasattr(QtCore, 'PYQT_VERSION'):
         sys.exit(app.exec_())
-       
+    sys.exit(app.exec_())
         
         
         
