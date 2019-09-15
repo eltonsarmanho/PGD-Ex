@@ -1,27 +1,34 @@
     
 from PyQt5.QtWidgets import QMainWindow, QApplication, QWidget, QAction, QTableWidget,QTableWidgetItem,QVBoxLayout
-from PyQt5.QtGui import QIcon
-from PyQt5.QtCore import pyqtSlot
+from PyQt5.QtGui import QIcon,QAbstractItemView
+from PyQt5.QtCore import pyqtSlot,Qt
 import sys
 
 
  
 class TableView(QTableWidget):
-    def __init__(self, data, *args):
+    def __init__(self, data,title, *args):
         QTableWidget.__init__(self, *args)
         self.data = data
-        self.setWindowTitle("EDA Metrics")
+        self.setWindowTitle(title)
         self.setData()
         self.resizeColumnsToContents()
         self.resizeRowsToContents()
-        #self.show()
+        self.setSelectionMode(QAbstractItemView.SingleSelection)
+        self.setSelectionBehavior(QAbstractItemView.SelectRows)
+        #self#.show()
  
     def setData(self): 
         horHeaders = []
-        for n, key in enumerate(sorted(self.data.keys())):
+        item1 = QTableWidgetItem()
+        item1.setFlags(Qt.ItemIsSelectable | Qt.ItemIsEditable | 
+              Qt.ItemIsEnabled)
+        for n, key in enumerate(sorted(self.data.keys(),reverse=True)):
+        #for n, key in enumerate((self.data.keys())):
             horHeaders.append(key)
             for m, item in enumerate(self.data[key]):
                 newitem = QTableWidgetItem(item)
+                newitem.setFlags(Qt.ItemIsSelectable  | Qt.ItemIsEnabled)
                 self.setItem(m, n, newitem)
         self.setHorizontalHeaderLabels(horHeaders)
  

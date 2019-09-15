@@ -16,6 +16,7 @@ from br.com.analytic.reduceFeatures.ReduceEmotion import ReduceEmotion
 from br.com.gui.TableView import TableView
 from theano.ifelse import ifelse
 from numba.tests.test_nested_calls import star
+from pyasn1.compat.octets import null
 matplotlib.use('Agg')
 
 from br.com.util.SourceData import SourceData
@@ -44,6 +45,15 @@ matplotlib.use('Agg')
 
 class FlowChartGame(QtGui.QMainWindow):
     
+    timeTagEnd = 0;
+    timeTagInitial = 0;
+    durantionSession = 0;
+    positionInitialSession = 0;
+    
+    fileBVP = "";
+    fileEDA = "" ;
+    fileEmotion = "";
+    forceDisconnectRangeSlider = False;
     
     def __init__(self, buffer_size=0, data_buffer=[], graph_title="", parent=None):
         super(FlowChartGame, self).__init__(parent)               
@@ -57,7 +67,6 @@ class FlowChartGame(QtGui.QMainWindow):
         self.windowPlots()
         
     def createMediaPlayer(self):
-        self.ShowVideo = True;
         self.mediaPlayer = QMediaPlayer(None, QMediaPlayer.VideoSurface)
         self.mediaPlayer2 = QMediaPlayer(None, QMediaPlayer.VideoSurface)       
         self.mediaPlayer.stateChanged.connect(self.mediaStateChanged)       
@@ -69,7 +78,6 @@ class FlowChartGame(QtGui.QMainWindow):
         except: pass;
         
     def destroyMediaPlayer(self):
-        self.ShowVideo = False;
         self.mediaPlayer.stop()
         self.mediaPlayer2.stop()
         btPlayer.setEnabled(False)
@@ -100,14 +108,14 @@ class FlowChartGame(QtGui.QMainWindow):
         resetPB.setShortcut("Ctrl+T")
         
         metricEDA = QtGui.QAction("EDA Metrics", self)
-        
+        timeIntervals = QtGui.QAction("Time Intervals", self)
         
         open = QtGui.QAction("Open E4 Data File with Video", self)
         open.setShortcut("Ctrl+O")
-        openSV = QtGui.QAction("Open E4 Data File without Video", self)
-        openSV.setShortcut("Ctrl+A")
+        #openSV = QtGui.QAction("Open E4 Data File without Video", self)
+        #openSV.setShortcut("Ctrl+A")
         file.addAction(open)
-        file.addAction(openSV)
+        #file.addAction(openSV)
                     
         quit = QtGui.QAction("Quit", self)
         quit.setShortcut("Ctrl+Q") 
@@ -121,6 +129,7 @@ class FlowChartGame(QtGui.QMainWindow):
         #tools.addAction(resetLG)
         tools.addAction(resetPB)
         tools.addAction(metricEDA)
+        tools.addAction(timeIntervals)
         file.triggered[QtGui.QAction].connect(self.processtrigger)
         tools.triggered[QtGui.QAction].connect(self.processTools)
 
@@ -134,10 +143,64 @@ class FlowChartGame(QtGui.QMainWindow):
                     str(metricsEDA['var']),str(metricsEDA['std_dev']),
                     str(metricsEDA['kurtosis']),str(metricsEDA['skewness'])]}
           
-            self.tv = TableView(data,7,2)
+            self.tv = TableView(data,"EDA Metrics",7,2)
             
             self.tv.show()
-           
+        elif(q.text() == "Time Intervals"):
+                
+            ut = UnixTime();
+            timeLeft = []
+            timeRight= []
+            for (t1,t2) in zip(arrayTagsInitial,arrayTagsEnd):                    
+                timeLeft.append(ut.time_inc(t1, 0).strftime('%H:%M:%S'))
+                timeRight.append(ut.time_reduce(t2, 0).strftime('%H:%M:%S'))    
+                
+            data ={'Initial Time':timeLeft,'End Time': timeRight}
+          
+            self.tv = TableView(data,"Time Intervals",len(arrayTagsInitial),2)            
+            self.tv.resizeColumnsToContents()
+            self.tv.horizontalHeader().setSectionResizeMode(QtGui.QHeaderView.Stretch)
+            
+                
+            self.win = QWidget()
+
+            def getSelectedInterval():
+                indexes = self.tv.selectionModel().selectedRows()
+                for index in sorted(indexes):
+                    self.setConfigureTimeInterval(arrayTagsInitial[index.row()], 
+                                                  arrayTagsEnd[index.row()])  
+                
+                self.workloadPlot()
+                self.forceDisconnectRangeSlider = True;
+                self.updateRangerSlider()
+                self.setPositionInPlayer(self.positionInitialSession)
+                destroyTable()
+            def destroyTable():
+                self.win.destroy()
+               
+            btSubmit = QtGui.QPushButton("Select") 
+            btCancel = QtGui.QPushButton("Cancel");
+            btSubmit.clicked.connect(getSelectedInterval)
+            btCancel.clicked.connect(destroyTable)
+            vbox = QtGui.QVBoxLayout()
+            vbox.addWidget(self.tv)
+            hbox = QtGui.QVBoxLayout()
+            hbox.addWidget(btSubmit)
+            hbox.addWidget(btCancel)
+            vbox.addLayout(hbox)
+            
+            
+            self.win.setLayout(vbox)
+             
+            self.win.setWindowTitle("PyQt")
+            self.win.adjustSize()
+            fg = self.frameGeometry()
+            cp = QtGui.QDesktopWidget().availableGeometry().center()
+            fg.moveCenter(cp)
+            self.win.move(fg.topLeft())
+            self.win.show()                
+            
+                
         elif(q.text() == "Reset Progress Bar Timer"):
             #if(timer.isActive()):
             #    timer.stop()                  
@@ -155,23 +218,21 @@ class FlowChartGame(QtGui.QMainWindow):
     def processtrigger(self, q):
         
         if(q.text() == 'Open E4 Data File with Video'):
-            self.ShowVideo = True;            
-            self.loadingVisualization(True)
-        elif (q.text() == 'Open E4 Data File without Video'):
-            self.destroyMediaPlayer()            
-            self.loadingVisualization(False)
+            self.loadingVisualization()
+        #elif (q.text() == 'Open E4 Data File without Video'):
+        #    self.destroyMediaPlayer()            
+        #    self.loadingVisualization(False)
         elif (q.text() == "Quit"):
             sys.exit(app.exec_())
         elif (q.text() == "Restart"):
             os.execl(sys.executable, sys.executable, *sys.argv) 
-    
-    def loadingVisualization(self,enableVideo):
-        if(self.plottingGraphics(enableVideo)):
+            
+    def loadingVisualization(self):
+        if(self.workload()):
             self.updateRangerSlider()            
-            positionRangeSlider.endValueChanged.connect(self.eventChangeRightRangeValue)
-            positionRangeSlider.startValueChanged.connect(self.eventChangeLeftRangeValue)
+            
 
-    def plottingGraphics(self, showVideo=None):
+    def workload(self ):
                
         dlg = QtGui.QFileDialog()       
         dlg.setFileMode(QtGui.QFileDialog.ExistingFiles)
@@ -186,9 +247,9 @@ class FlowChartGame(QtGui.QMainWindow):
             
             videoSC = "" 
             videoWC = ""
-            fileBVP = ""
-            fileEDA = ""
-            fileEmotion = ""
+            self.fileBVP = ""
+            self.fileEDA = ""
+            self.fileEmotion = ""
             tagFileVideo = ""
             tagFile = ""
             for file in filenames:
@@ -207,56 +268,46 @@ class FlowChartGame(QtGui.QMainWindow):
                 elif(filename == 'tags.csv'):                    
                     tagFile = file;
                 elif filename == 'BVP.csv':
-                    fileBVP = file;
-                
+                    self.fileBVP = file;                
                 elif filename == 'EDA.csv':
-                    fileEDA = file; 
+                    self.fileEDA = file; 
                 elif ("EMOCAO") in filename:
-                    fileEmotion = file; 
+                    self.fileEmotion = file; 
                                
             
+            
+            
+            if tagFileVideo:
+                self.setTagVideo(tagFileVideo);
+            else: 
+                QMessageBox.information(self, "Message", "Tag Video not selected");
+                return False;
+                    
             if tagFile:                
                 self.setTags(tagFile)
             else: 
                 QMessageBox.information(self, "Message", "Tag File not selected");
                 return False
             
-            if showVideo: 
-                if tagFileVideo:
-                    self.setTagVideo(tagFileVideo);
-                else: 
-                    QMessageBox.information(self, "Message", "Tag Video not selected");
-                    return False;
-            else:  tagFileVideo = tagFile;#Same Point. Not difference on Time 
-                    
-            if showVideo:
-                if videoSC:
-                    self.openFile(videoSC)
-                else: 
-                    QMessageBox.information(self, "Message", "Error in Loading Media: Screen Capture video not found");
-                    return False;
-            if showVideo:
-                if videoWC:
-                    self.openFile(videoWC)
-                else: 
-                    QMessageBox.information(self, "Message", "Error in Loading Media: video not found");
-                    return False;
+            if videoSC:
+                self.openFile(videoSC)
+            else: 
+                QMessageBox.information(self, "Message", "Error in Loading Media: Screen Capture video not found");
+                return False;
+            if videoWC:
+                self.openFile(videoWC)
+            else: 
+                QMessageBox.information(self, "Message", "Error in Loading Media: video not found");
+                return False;
             
-            if(fileBVP or fileEDA or fileEmotion):
+            if(self.fileBVP or self.fileEDA or self.fileEmotion):
                 QMessageBox.information(self, "Message", "The files were loaded successfully");
+                self.workloadPlot()
             else: 
                 QMessageBox.information(self, "Message", "The Empatica E4 output or Emotion file not found");
                 return False;
 
-            if fileEmotion:
-                self.PlotEmotion(fileEmotion)
-            if fileBVP:
-                self.PlotHRFromBVP(fileBVP)
-            if fileEDA:
-                self.PlotEda(fileEDA)
             
-            
-
             return True;
     
         except IOError:
@@ -276,13 +327,16 @@ class FlowChartGame(QtGui.QMainWindow):
         
         except:            
             QMessageBox.information(self, "Message", "An error occurred")
-     
+  
+    def workloadPlot(self):
+        self.PlotEmotion(self.fileEmotion)
+        self.PlotHRFromBVP(self.fileBVP)
+        self.PlotEda(self.fileEDA)
+    
     def setTags(self,path):
        
-        global timeTagEnd;
-        global timeTagInitial;
-        global durantionSession;
-        
+        global arrayTagsInitial;
+        global arrayTagsEnd;
 
         try:
             sd = SourceData()
@@ -292,15 +346,9 @@ class FlowChartGame(QtGui.QMainWindow):
                 print("There is only one Tag");
                 sys.exit(app.exec_());   
             elif (len(tags) % 2 == 0 ):
-                timeTagsInitial = tags[0::2];
-                timeTagsEnd = tags[1::2];
-                #Popup para escolher Tags
-                
-                timeTagInitial = timeTagsInitial[0];
-                timeTagEnd = timeTagsEnd[0];
-                durantionSession = UnixTime().diffTimeStampTags(timeTagInitial, timeTagEnd)    
-                self.loadingTimeProgressaBar(0,0)
-                
+                arrayTagsInitial = tags[0::2];
+                arrayTagsEnd = tags[1::2];
+                self.setConfigureTimeInterval(arrayTagsInitial[0], arrayTagsEnd[0]);
             else: 
                 QMessageBox.information(self, "Message", "There should be two Tags");
                 print("There should be two Tags");
@@ -309,21 +357,29 @@ class FlowChartGame(QtGui.QMainWindow):
             print("Erro during Loading Tags")
             sys.exit(app.exec_());
     
+    def setConfigureTimeInterval(self,initialTime,endTime):
+        self.timeTagInitial = initialTime;
+        self.timeTagEnd = endTime;
+        self.durantionSession = UnixTime().diffTimeStampTags(self.timeTagInitial, self.timeTagEnd)
+        self.positionInitialSession = UnixTime().diffTimeStamp(timeVideo,self.timeTagInitial)*1000  
+        self.loadingTimeProgressaBar(0,0)
+
     def loadingTimeProgressaBar(self,shiftLeft,shiftRight):
         ut = UnixTime();
-        timeLeft =  ut.time_inc(timeTagInitial, shiftLeft)   
-        timeRight = ut.time_reduce(timeTagEnd, shiftRight)     
+        timeLeft =  ut.time_inc(self.timeTagInitial, shiftLeft)   
+        timeRight = ut.time_reduce(self.timeTagEnd, shiftRight)     
         time =  '{} / {}'.format(timeLeft.strftime('%H:%M:%S'),timeRight.strftime('%H:%M:%S'))
         timeProgressBar.setText(time)
+        timeLabel.setText(time)
+        timeLabel2.setText(time) 
         return time;
     
     def setTagVideo(self,path):
         global timeVideo;
-        global positionInitialSession
         try:
             f = open(path, "r")
             timeVideo = float(f.read());
-            positionInitialSession = UnixTime().diffTimeStamp(timeVideo,timeTagInitial)*1000  
+            #self.positionInitialSession = UnixTime().diffTimeStamp(timeVideo,self.timeTagInitial)*1000  
             
         except:
             QMessageBox.information(self, "Message", "Erro during Loading Video Tag");
@@ -342,10 +398,12 @@ class FlowChartGame(QtGui.QMainWindow):
         
         self.splitter.addWidget(containerLeft)
         self.splitter.addWidget(containerRight)
-        
-        gridl = QtGui.QGridLayout()
-        gridl.addWidget(self.splitter)
-        return gridl;
+        vbox = QtGui.QVBoxLayout()
+        vbox.addWidget(self.splitter)
+        containerbottom = QtGui.QWidget()
+        containerbottom.setLayout(self.uiTimeBar())
+        vbox.addWidget(containerbottom)
+        return vbox;
                  
     def uiPanelPlot(self):
         global pwEDA;        
@@ -356,7 +414,7 @@ class FlowChartGame(QtGui.QMainWindow):
         global isCreatedPlotBVP;
         self.isCreatedPlotEda = False;
         self.isCreatedPlotHR = False;
-        self.isCreatedPlotBVP = False;
+        self.isCreatedPlotEmotion = False;
         
         
         #global pwTemp;
@@ -380,9 +438,9 @@ class FlowChartGame(QtGui.QMainWindow):
         splitter.addWidget(pwEmotion)
         
         
-        containerbottom = QtGui.QWidget()
-        containerbottom.setLayout(self.uiTimeBar())
-        splitter.addWidget(containerbottom)
+        #containerbottom = QtGui.QWidget()
+        #containerbottom.setLayout(self.uiTimeBar())
+        #splitter.addWidget(containerbottom)
         vbox.addWidget(splitter)
        
         
@@ -391,10 +449,8 @@ class FlowChartGame(QtGui.QMainWindow):
     def uiTimeBar(self):
                
         global positionRangeSlider;
-        global timeProgressBar;
-    
-        global btPlayer;
-        
+        global timeProgressBar;    
+        global btPlayer;        
         
         positionRangeSlider = QRangeSlider()
     
@@ -500,7 +556,7 @@ class FlowChartGame(QtGui.QMainWindow):
                 
     def mediaStateChanged(self, state):
         try:
-            if  self.ShowVideo:
+            
                 if self.mediaPlayer.state() == QMediaPlayer.PlayingState:
                     btPlayer.setIcon(
                             self.style().standardIcon(QStyle.SP_MediaPause))
@@ -510,21 +566,16 @@ class FlowChartGame(QtGui.QMainWindow):
         except: 
             print("No media player");
             
-    def changedLabelTime(self, str):  
-        if  self.ShowVideo:     
-            timeLabel.setText("Time: " + str)
-            timeLabel2.setText("Time: " + str)   
-           
     def positionChanged(self, position):       
         if self.mediaPlayer.state() == QMediaPlayer.PlayingState:
             #print("positionChanged: Position:: %s" % position)
-            #if(position>=positionInitialSession):
+            #if(position>=self.positionInitialSession):
             positionRangeSlider.setStart(position)
             self.addLinearRegionInPlotWidget()
 
     def durationChanged(self, duration):  
         print("Duration Video in miliseconds: %s" % duration)
-        self.setPositionInPlayer(positionInitialSession)
+        self.setPositionInPlayer(self.positionInitialSession)
      
     def setPositionInPlayer(self, position):
         #print("setPositionInPlayer")
@@ -536,50 +587,55 @@ class FlowChartGame(QtGui.QMainWindow):
         timeLabel.setText("Error: " + self.mediaPlayer.errorString())
             
     def updateRangerSlider(self):
+        
+        if(self.forceDisconnectRangeSlider):
+            positionRangeSlider.endValueChanged.disconnect(self.eventChangeRightRangeValue)
+            positionRangeSlider.startValueChanged.disconnect(self.eventChangeLeftRangeValue)
+        
         global positionEndSession;
-        positionEndSession = positionInitialSession+durantionSession;
-        print("Duration session in miliseconds: %s" % (durantionSession))
-        print("Initial Point: %s" % positionInitialSession)
+        positionEndSession = self.positionInitialSession+self.durantionSession;
+        print("Duration session in miliseconds: %s" % (self.durantionSession))
+        print("Initial Point: %s" % self.positionInitialSession)
         print("End Point: %s"% (positionEndSession))
-        positionRangeSlider.setMin(positionInitialSession)
+        
+        positionRangeSlider.setMin(self.positionInitialSession)
         positionRangeSlider.setMax(positionEndSession)
-        positionRangeSlider.setRange(positionInitialSession,positionEndSession)
+        positionRangeSlider.setRange(self.positionInitialSession,positionEndSession)   
+        
+        positionRangeSlider.endValueChanged.connect(self.eventChangeRightRangeValue)
+        positionRangeSlider.startValueChanged.connect(self.eventChangeLeftRangeValue)
+        self.forceDisconnectRangeSlider = False;                
+
     
-                                              
     def eventChangeRightRangeValue(self, index):
         
         #print("eventChangeRightRangeValue : %s - %s" % (index,positionEndSession))
         if(index <= positionRangeSlider.start()):
             time = self.loadingTimeProgressaBar(0,0)
-            self.changedLabelTime(time)
         elif ((positionEndSession-index) >= 0):
-            time = self.loadingTimeProgressaBar(positionRangeSlider.start()-positionInitialSession,
+            time = self.loadingTimeProgressaBar(positionRangeSlider.start()-self.positionInitialSession,
                                                 positionEndSession-index)
-            self.changedLabelTime(time)
         if(positionRangeSlider.getMoved()):
             if self.mediaPlayer.state() == QMediaPlayer.PlayingState:
                 self.mediaPlayer.pause();
                 self.mediaPlayer2.pause()
             
             self.setPositionInPlayer(positionRangeSlider.start())
-         
     
     def eventChangeLeftRangeValue(self, index):
-        #print("eventChangeLeftRangeValue: %s - %s = %s" % (index,positionInitialSession,(index-positionInitialSession)))
+        #print("eventChangeLeftRangeValue: %s - %s = %s" % (index,self.positionInitialSession,(index-self.positionInitialSession)))
         #print(positionRangeSlider.getMoved())
         if(index >= positionRangeSlider.end()):
-            positionRangeSlider.setRange(positionInitialSession,positionEndSession)
+            positionRangeSlider.setRange(self.positionInitialSession,positionEndSession)
             self.mediaPlayer.pause();
             self.mediaPlayer2.pause();
-            self.setPositionInPlayer(positionInitialSession)
+            self.setPositionInPlayer(self.positionInitialSession)
             time = self.loadingTimeProgressaBar(0,0)
-            self.changedLabelTime(time)
             self.clearLinearRegion()
 
-        elif(index-positionInitialSession >= 0):
-            time = self.loadingTimeProgressaBar(index-positionInitialSession,
+        elif(index-self.positionInitialSession >= 0):
+            time = self.loadingTimeProgressaBar(index-self.positionInitialSession,
                                                 positionEndSession-positionRangeSlider.end())
-            self.changedLabelTime(time)
         if(positionRangeSlider.getMoved()):
             if self.mediaPlayer.state() == QMediaPlayer.PlayingState:
                 self.mediaPlayer.pause();
@@ -602,29 +658,31 @@ class FlowChartGame(QtGui.QMainWindow):
        
         global ts;
         global metricsEDA;
-        self.isCreatedPlotEda = True;
-
+        global plotEDA
+            
      
         eda = EDAPeakDetectionScript()
         
         ts,raw_eda,filtered_eda,peaks,amp = eda.processEDA(path,
-                                                       UnixTime().run(timeTagInitial),
-                                                       UnixTime().run(timeTagEnd))
+                                                       UnixTime().run(self.timeTagInitial),
+                                                       UnixTime().run(self.timeTagEnd))
         metricsEDA  = ProcessingData().getMetricsEDA(raw_eda)
+        normalize_data_eda = ProcessingData().normalize(filtered_eda)
         
-        plot = pwEDA.plot(title='EDA Pike', pen='r')
-        pwEDA.getPlotItem().addLegend(offset=(10,10))
-        
+        if(self.isCreatedPlotEda):
+            plotEDA.clear()
+            pwEDA.clear();
+            
+        plotEDA = pwEDA.plot(title='EDA Pike', pen='r')
+        pwEDA.getPlotItem().addLegend(offset=(10,10))        
         pwEDA.addItem(pg.PlotDataItem(pen='r', name='GSR Value', antialias=False))
         pwEDA.addItem(pg.PlotDataItem(pen='b', name='GSR Peak', antialias=False))       
         pwEDA.getPlotItem().getViewBox().setMouseMode(pg.ViewBox.RectMode)
-
+        pwEDA.setMouseEnabled(x=False, y=False)
         axis = DateAxis(orientation='bottom')
         axis.attachToPlotItem(pwEDA.getPlotItem())
-        normalize_data_eda = ProcessingData().normalize(filtered_eda)
-        plot.setData(x= ts,y=normalize_data_eda)
+        plotEDA.setData(x= ts,y=normalize_data_eda)        
         
-        pwEDA.setMouseEnabled(x=False, y=False)
         for peak in peaks:
             aux = str(float("{0:.2f}".format(filtered_eda[peak])));            
             l =  pwEDA.addLine(x=ts[peak], y=None, pen='b')
@@ -634,24 +692,30 @@ class FlowChartGame(QtGui.QMainWindow):
         self.lrEDA.setZValue(-10)  
         pwEDA.addItem(self.lrEDA) 
         self.lrEDA.setRegion([ts[0],ts[0]])
+        
+        self.isCreatedPlotEda = True;
       
     def createHR(self, ts_hr, hr,filteredBVP):
         print("PlotHRFromBVP")    
-        self.isCreatedPlotHR = True;
+        global plotHR
         
-        timeHR = UnixTime().timeFrom(timeTagInitial, ts_hr)
+        timeHR = UnixTime().timeFrom(self.timeTagInitial, ts_hr)
         
         n_array = list(zip(timeHR,hr))        
         df = pd.DataFrame(n_array,columns=['timeHR','hr'])        
         df['timeHR'] = [datetime.fromtimestamp(ts) for ts in df['timeHR']]  
-        df = df[(df['timeHR'] >= UnixTime().run(timeTagInitial)) & 
-             (df['timeHR'] <= UnixTime().run(timeTagEnd))]       
+        df = df[(df['timeHR'] >= UnixTime().run(self.timeTagInitial)) & 
+             (df['timeHR'] <= UnixTime().run(self.timeTagEnd))]       
         
         hr  = df['hr'].tolist()
         timeHR = [datetime.timestamp(dt) for dt in df['timeHR']]
        
-        #plot = pwHR.plot(title="HR", pen='r',symbol='o')
-        plot = pwHR.plot(title="HR", pen='r')
+        if(self.isCreatedPlotHR):
+            plotHR.clear()
+            pwHR.clear();
+       
+        
+        plotHR = pwHR.plot(title="HR", pen='r')
         pwHR.getPlotItem().addLegend()
         pwHR.addItem(pg.PlotDataItem(pen='r', name='HR Value', antialias=False))
         pwHR.getPlotItem().getViewBox().setMouseMode(pg.ViewBox.RectMode)
@@ -660,23 +724,25 @@ class FlowChartGame(QtGui.QMainWindow):
         axis.attachToPlotItem(pwHR.getPlotItem())
         
         normalize_data_hr = ProcessingData().normalize(df['hr'])
-        plot.setData(x=timeHR, y=normalize_data_hr.tolist())
+        plotHR.setData(x=timeHR, y=normalize_data_hr.tolist())
         pwHR.setMouseEnabled(x=False, y=False)
         
-        plot = pwHR.plot(title="HRV", pen='b')
+        plotHR = pwHR.plot(title="HRV", pen='b')
         pwHR.addItem(pg.PlotDataItem(pen='b', name='HRV Value', antialias=False))
         
-        RRI_DF = EmpaticaHRV().getRRI(filteredBVP, timeTagInitial, 64)
+        RRI_DF = EmpaticaHRV().getRRI(filteredBVP, self.timeTagInitial, 64)
         HRV_DF = EmpaticaHRV().getHRV(RRI_DF, np.mean(hr))
         timeHR = HRV_DF['Timestamp'].tolist()
         normalize_data_hrv = ProcessingData().normalize(HRV_DF['HRV'])
-        plot.setData(x=timeHR, y=normalize_data_hrv.tolist())
+        plotHR.setData(x=timeHR, y=normalize_data_hrv.tolist())
        
         self.lrHR = pg.LinearRegionItem([timeHR[0], timeHR[len(timeHR)-1]],
                                         bounds=[timeHR[0], timeHR[len(timeHR)-1]])  
         self.lrHR.setZValue(-10)  
         pwHR.addItem(self.lrHR)
         self.lrHR.setRegion([timeHR[0],timeHR[0]])
+        
+        self.isCreatedPlotHR = True;
     
     def PlotHRFromBVP(self, path):
         
@@ -687,21 +753,23 @@ class FlowChartGame(QtGui.QMainWindow):
         filteredBVP, ts_hr, hr = ProcessingData().ProcessedBVPDataE4(data) 
        
         ut = UnixTime();        
-        endTime, tsBVP = ut.time_array(timeTagInitial, count, samplingRate)
+        endTime, tsBVP = ut.time_array(self.timeTagInitial, count, samplingRate)
                 
         n_array = list(zip(tsBVP,filteredBVP))        
         df = pd.DataFrame(n_array,columns=['tsBVP','filteredBVP'])        
         df['tsBVP'] = [datetime.fromtimestamp(ts) for ts in df['tsBVP']]
         #Cut in time
-        df = df[(df['tsBVP'] >=  UnixTime().run(timeTagInitial)) & 
-                (df['tsBVP'] <= UnixTime().run(timeTagEnd))]       
+        df = df[(df['tsBVP'] >=  UnixTime().run(self.timeTagInitial)) & 
+                (df['tsBVP'] <= UnixTime().run(self.timeTagEnd))]       
         filteredBVP  = df['filteredBVP'].tolist()       
        
         self.createHR(ts_hr, hr,filteredBVP)
    
     def PlotEmotion(self,url):
-        
+        print("PlotEmotion")
+        global plotEmotion;
         try:
+            
             js = SourceData()
             df = js.LoadDataFacialExpression(indexSession=None, path=url);
             
@@ -716,15 +784,18 @@ class FlowChartGame(QtGui.QMainWindow):
             dataframe = pd.DataFrame(d1,columns=['tsEmotion','arrayPCA1','arrayPCA2'])   
             
             #Cut in time
-            dataframe = dataframe[(dataframe['tsEmotion'] >=  UnixTime().run(timeTagInitial)) & 
-                                  (dataframe['tsEmotion'] <= UnixTime().run(timeTagEnd))]
+            dataframe = dataframe[(dataframe['tsEmotion'] >=  UnixTime().run(self.timeTagInitial)) & 
+                                  (dataframe['tsEmotion'] <= UnixTime().run(self.timeTagEnd))]
     
             arrayPCA1  = dataframe['arrayPCA1'].tolist()
             arrayPCA2  = dataframe['arrayPCA2'].tolist()
             tsEmotion = [datetime.timestamp(dt) for dt in dataframe['tsEmotion']]
            
-        
-            plot = pwEmotion.plot(title="Emotion", pen='b')
+            if(self.isCreatedPlotEmotion):
+                plotEmotion.clear()
+                pwEmotion.clear();
+            
+            plotEmotion = pwEmotion.plot(title="Emotion", pen='b')
             pwEmotion.getPlotItem().addLegend()
             
             pwEmotion.addItem(pg.PlotDataItem(pen='b', name='Positive Value', antialias=False))
@@ -733,10 +804,10 @@ class FlowChartGame(QtGui.QMainWindow):
             axis = DateAxis(orientation='bottom')
             axis.attachToPlotItem(pwEmotion.getPlotItem())
             
-            plot.setData(x=tsEmotion, y=arrayPCA1)
-            plot = pwEmotion.plot(title="Emotion", pen='r')
+            plotEmotion.setData(x=tsEmotion, y=arrayPCA1)
+            plotEmotion = pwEmotion.plot(title="Emotion", pen='r')
             pwEmotion.addItem(pg.PlotDataItem(pen='r', name='Negative Value', antialias=False))
-            plot.setData(x=tsEmotion, y=arrayPCA2)
+            plotEmotion.setData(x=tsEmotion, y=arrayPCA2)
             
             #Plot was created
             self.isCreatedPlotBVP = True;
@@ -744,6 +815,8 @@ class FlowChartGame(QtGui.QMainWindow):
             self.lrBVP.setZValue(-10)  
             pwEmotion.addItem(self.lrBVP) 
             self.lrBVP.setRegion([tsEmotion[0],tsEmotion[0]])
+            
+            self.isCreatedPlotEmotion= True;
             return True;
         except: 
             print("Oops!",sys.exc_info()[0],"occured.")
@@ -753,29 +826,21 @@ class FlowChartGame(QtGui.QMainWindow):
     def clearLinearRegion(self):
         ut = UnixTime();
 
-        indexInitial = datetime.timestamp(ut.time_inc(timeTagInitial,0))
-             
-        if(self.isCreatedPlotEda):          
-            #pwEDA.removeItem(self.lrEDA)           
-            self.lrEDA.setRegion([indexInitial,indexInitial])
-        if(self.isCreatedPlotBVP):
-            self.lrBVP.setRegion([indexInitial,indexInitial])  
-        if(self.isCreatedPlotHR):
-            self.lrHR.setRegion([indexInitial,indexInitial]) 
+        indexInitial = datetime.timestamp(ut.time_inc(self.timeTagInitial,0))
+        self.lrEDA.setRegion([indexInitial,indexInitial])
+        self.lrBVP.setRegion([indexInitial,indexInitial])  
+        self.lrHR.setRegion([indexInitial,indexInitial]) 
             
     def addLinearRegionInPlotWidget(self):
         if self.mediaPlayer.state() != QMediaPlayer.PausedState:
 
             ut = UnixTime();
-            indexInitial = datetime.timestamp(ut.time_inc(timeTagInitial, 
-                                                          positionRangeSlider.start()-positionInitialSession))
-            indexEnd =  datetime.timestamp(ut.time_reduce(timeTagEnd, positionEndSession-positionRangeSlider.end()))
-            if(self.isCreatedPlotEda):          
-                self.lrEDA.setRegion([indexInitial,indexEnd])
-            if(self.isCreatedPlotBVP):
-                self.lrBVP.setRegion([indexInitial,indexEnd])            
-            if(self.isCreatedPlotHR):
-                self.lrHR.setRegion([indexInitial,indexEnd]) 
+            indexInitial = datetime.timestamp(ut.time_inc(self.timeTagInitial, 
+                                                          positionRangeSlider.start()-self.positionInitialSession))
+            indexEnd =  datetime.timestamp(ut.time_reduce(self.timeTagEnd, positionEndSession-positionRangeSlider.end()))
+            self.lrEDA.setRegion([indexInitial,indexEnd])
+            self.lrBVP.setRegion([indexInitial,indexEnd])            
+            self.lrHR.setRegion([indexInitial,indexEnd]) 
        
     def is_video_file(self,filename):
         video_file_extensions = (
@@ -787,12 +852,7 @@ class FlowChartGame(QtGui.QMainWindow):
             return True
         return False;
     
-    def getTimeDetails(self, duration):
-        
-        hours = duration.hour
-        minutes = duration.minute                
-        seconds = duration.second 
-        return (hours, minutes, seconds) 
+    
 
 if __name__ == '__main__':
     app = QtGui.QApplication(sys.argv)
