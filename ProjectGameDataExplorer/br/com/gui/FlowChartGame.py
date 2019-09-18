@@ -231,7 +231,6 @@ class FlowChartGame(QtGui.QMainWindow):
         if(self.workload()):
             self.updateRangerSlider()            
             
-
     def workload(self ):
                
         dlg = QtGui.QFileDialog()       
@@ -456,6 +455,7 @@ class FlowChartGame(QtGui.QMainWindow):
     
         positionRangeSlider.handle.setTextColor(150)
         positionRangeSlider.setFixedHeight(30)
+        #positionRangeSlider.setFixedWidth(1000)
         
         btPlayer = QtGui.QPushButton("")
         btPlayer.setIcon(self.style().standardIcon(QStyle.SP_MediaPlay))
@@ -672,15 +672,19 @@ class FlowChartGame(QtGui.QMainWindow):
         if(self.isCreatedPlotEda):
             plotEDA.clear()
             pwEDA.clear();
-            
+            #pwEDA.remove(kind='item') 
         plotEDA = pwEDA.plot(title='EDA Pike', pen='r')
-        pwEDA.getPlotItem().addLegend(offset=(10,10))        
-        pwEDA.addItem(pg.PlotDataItem(pen='r', name='GSR Value', antialias=False))
-        pwEDA.addItem(pg.PlotDataItem(pen='b', name='GSR Peak', antialias=False))       
-        pwEDA.getPlotItem().getViewBox().setMouseMode(pg.ViewBox.RectMode)
-        pwEDA.setMouseEnabled(x=False, y=False)
-        axis = DateAxis(orientation='bottom')
-        axis.attachToPlotItem(pwEDA.getPlotItem())
+        
+        if(not self.isCreatedPlotEda):
+            pwEDA.getPlotItem().addLegend(offset=(10,10))        
+            pwEDA.addItem(pg.PlotDataItem(pen='r', name='GSR Value', antialias=False))
+            pwEDA.addItem(pg.PlotDataItem(pen='b', name='GSR Peak', antialias=False))       
+            pwEDA.getPlotItem().getViewBox().setMouseMode(pg.ViewBox.RectMode)
+            pwEDA.setMouseEnabled(x=False, y=False)
+            axis = DateAxis(orientation='bottom')
+            axis.attachToPlotItem(pwEDA.getPlotItem())
+            
+        
         plotEDA.setData(x= ts,y=normalize_data_eda)        
         
         for peak in peaks:
@@ -712,23 +716,23 @@ class FlowChartGame(QtGui.QMainWindow):
        
         if(self.isCreatedPlotHR):
             plotHR.clear()
-            pwHR.clear();
-       
+            pwHR.clear();       
         
         plotHR = pwHR.plot(title="HR", pen='r')
-        pwHR.getPlotItem().addLegend()
-        pwHR.addItem(pg.PlotDataItem(pen='r', name='HR Value', antialias=False))
-        pwHR.getPlotItem().getViewBox().setMouseMode(pg.ViewBox.RectMode)
-        
-        axis = DateAxis(orientation='bottom')
-        axis.attachToPlotItem(pwHR.getPlotItem())
+        if(not self.isCreatedPlotHR):
+            pwHR.getPlotItem().addLegend()
+            pwHR.addItem(pg.PlotDataItem(pen='r', name='HR Value', antialias=False))
+            pwHR.getPlotItem().getViewBox().setMouseMode(pg.ViewBox.RectMode)
+            pwHR.setMouseEnabled(x=False, y=False)
+            axis = DateAxis(orientation='bottom')
+            axis.attachToPlotItem(pwHR.getPlotItem())
         
         normalize_data_hr = ProcessingData().normalize(df['hr'])
         plotHR.setData(x=timeHR, y=normalize_data_hr.tolist())
-        pwHR.setMouseEnabled(x=False, y=False)
         
         plotHR = pwHR.plot(title="HRV", pen='b')
-        pwHR.addItem(pg.PlotDataItem(pen='b', name='HRV Value', antialias=False))
+        if(not self.isCreatedPlotHR):
+            pwHR.addItem(pg.PlotDataItem(pen='b', name='HRV Value', antialias=False))
         
         RRI_DF = EmpaticaHRV().getRRI(filteredBVP, self.timeTagInitial, 64)
         HRV_DF = EmpaticaHRV().getHRV(RRI_DF, np.mean(hr))
@@ -795,22 +799,22 @@ class FlowChartGame(QtGui.QMainWindow):
                 plotEmotion.clear()
                 pwEmotion.clear();
             
-            plotEmotion = pwEmotion.plot(title="Emotion", pen='b')
-            pwEmotion.getPlotItem().addLegend()
-            
-            pwEmotion.addItem(pg.PlotDataItem(pen='b', name='Positive Value', antialias=False))
-            pwEmotion.getPlotItem().getViewBox().setMouseMode(pg.ViewBox.RectMode)
-            
-            axis = DateAxis(orientation='bottom')
-            axis.attachToPlotItem(pwEmotion.getPlotItem())
-            
+            plotEmotion = pwEmotion.plot(title="Emotion", pen='b')            
+            if(not self.isCreatedPlotEmotion):
+                pwEmotion.getPlotItem().addLegend()            
+                pwEmotion.addItem(pg.PlotDataItem(pen='b', name='Positive Value', antialias=False))
+                pwEmotion.getPlotItem().getViewBox().setMouseMode(pg.ViewBox.RectMode)
+                axis = DateAxis(orientation='bottom')
+                axis.attachToPlotItem(pwEmotion.getPlotItem())                   
             plotEmotion.setData(x=tsEmotion, y=arrayPCA1)
+            
+            
             plotEmotion = pwEmotion.plot(title="Emotion", pen='r')
-            pwEmotion.addItem(pg.PlotDataItem(pen='r', name='Negative Value', antialias=False))
+            if(not self.isCreatedPlotEmotion):
+                pwEmotion.addItem(pg.PlotDataItem(pen='r', name='Negative Value', antialias=False))
             plotEmotion.setData(x=tsEmotion, y=arrayPCA2)
             
             #Plot was created
-            self.isCreatedPlotBVP = True;
             self.lrBVP = pg.LinearRegionItem([tsEmotion[0], tsEmotion[len(tsEmotion)-1]],bounds=[tsEmotion[0], tsEmotion[len(tsEmotion)-1]])  
             self.lrBVP.setZValue(-10)  
             pwEmotion.addItem(self.lrBVP) 
