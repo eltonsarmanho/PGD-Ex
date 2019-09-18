@@ -14,9 +14,8 @@ import sys, os
 import matplotlib
 from br.com.analytic.reduceFeatures.ReduceEmotion import ReduceEmotion
 from br.com.gui.TableView import TableView
-from theano.ifelse import ifelse
-from numba.tests.test_nested_calls import star
-from pyasn1.compat.octets import null
+
+
 matplotlib.use('Agg')
 
 from br.com.util.SourceData import SourceData
@@ -54,6 +53,8 @@ class FlowChartGame(QtGui.QMainWindow):
     fileEDA = "" ;
     fileEmotion = "";
     forceDisconnectRangeSlider = False;
+    _listEmotion =  ['Happiness','Sadness','Anger',
+                      'Fear','Surprise','Disgust']
     
     def __init__(self, buffer_size=0, data_buffer=[], graph_title="", parent=None):
         super(FlowChartGame, self).__init__(parent)               
@@ -96,6 +97,7 @@ class FlowChartGame(QtGui.QMainWindow):
         self.mainbox.layout().addLayout(self.uiMainPanel(), 0, 0, 1, 1)
         self.MenuBar();
         
+        
     def MenuBar(self):
         
         layout = QtGui.QHBoxLayout()
@@ -109,6 +111,7 @@ class FlowChartGame(QtGui.QMainWindow):
         
         metricEDA = QtGui.QAction("EDA Metrics", self)
         timeIntervals = QtGui.QAction("Time Intervals", self)
+        emotionalComponents = QtGui.QAction("Emotional Components", self)
         
         open = QtGui.QAction("Open E4 Data File with Video", self)
         open.setShortcut("Ctrl+O")
@@ -129,6 +132,7 @@ class FlowChartGame(QtGui.QMainWindow):
         #tools.addAction(resetLG)
         tools.addAction(resetPB)
         tools.addAction(metricEDA)
+        tools.addAction(emotionalComponents)
         tools.addAction(timeIntervals)
         file.triggered[QtGui.QAction].connect(self.processtrigger)
         tools.triggered[QtGui.QAction].connect(self.processTools)
@@ -146,6 +150,52 @@ class FlowChartGame(QtGui.QMainWindow):
             self.tv = TableView(data,"EDA Metrics",7,2)
             
             self.tv.show()
+        elif(q.text() == "Emotional Components"):
+            _list =  ['Happiness','Sadness','Anger',
+                      'Fear','Surprise','Disgust']
+            data = {'Emotional components': _list}
+            
+            self.tv = TableView(data,"Time Intervals",6,1)            
+            
+            self.tv.setModeMultiple()
+            self.tv.resizeColumnsToContents()
+            self.tv.horizontalHeader().setSectionResizeMode(QtGui.QHeaderView.Stretch)                
+            self.win = QWidget()
+            
+            def getSelectedInterval():
+                indexes = self.tv.selectionModel().selectedRows()
+                listSelected =[]
+                for index in sorted(indexes):
+                    print("index %s Emotion %s" % (index.row(),_list[index.row()])) 
+                    listSelected.append(_list[index.row()])
+                self._listEmotion = listSelected;
+                self.workloadPlot()
+                destroyTable()
+            def destroyTable():
+                self.win.destroy()
+               
+            btSubmit = QtGui.QPushButton("Select") 
+            btCancel = QtGui.QPushButton("Cancel");
+            btSubmit.clicked.connect(getSelectedInterval)
+            btCancel.clicked.connect(destroyTable)
+            vbox = QtGui.QVBoxLayout()
+            vbox.addWidget(self.tv)
+            hbox = QtGui.QVBoxLayout()
+            hbox.addWidget(btSubmit)
+            hbox.addWidget(btCancel)
+            vbox.addLayout(hbox)
+            
+            
+            self.win.setLayout(vbox)
+             
+            self.win.setWindowTitle("PyQt")
+            self.win.adjustSize()
+            fg = self.frameGeometry()
+            cp = QtGui.QDesktopWidget().availableGeometry().center()
+            fg.moveCenter(cp)
+            self.win.move(fg.topLeft())
+            self.win.show()            
+          
         elif(q.text() == "Time Intervals"):
                 
             ut = UnixTime();
@@ -159,9 +209,7 @@ class FlowChartGame(QtGui.QMainWindow):
           
             self.tv = TableView(data,"Time Intervals",len(arrayTagsInitial),2)            
             self.tv.resizeColumnsToContents()
-            self.tv.horizontalHeader().setSectionResizeMode(QtGui.QHeaderView.Stretch)
-            
-                
+            self.tv.horizontalHeader().setSectionResizeMode(QtGui.QHeaderView.Stretch)                
             self.win = QWidget()
 
             def getSelectedInterval():
@@ -218,10 +266,7 @@ class FlowChartGame(QtGui.QMainWindow):
     def processtrigger(self, q):
         
         if(q.text() == 'Open E4 Data File with Video'):
-            self.loadingVisualization()
-        #elif (q.text() == 'Open E4 Data File without Video'):
-        #    self.destroyMediaPlayer()            
-        #    self.loadingVisualization(False)
+            self.loadingVisualization()       
         elif (q.text() == "Quit"):
             sys.exit(app.exec_())
         elif (q.text() == "Restart"):
@@ -245,7 +290,7 @@ class FlowChartGame(QtGui.QMainWindow):
                 return False
             
             videoSC = "" 
-            videoWC = ""
+            videoExtra = ""
             self.fileBVP = ""
             self.fileEDA = ""
             self.fileEmotion = ""
@@ -260,8 +305,8 @@ class FlowChartGame(QtGui.QMainWindow):
                 
                 if(self.is_video_file(filename) and ("SC") in filename):
                     videoSC = file;
-                elif(self.is_video_file(filename) and ("WC") in filename):
-                    videoWC = file;   
+                elif(self.is_video_file(filename) and (("WC") in filename or ("HV") in filename)):
+                    videoExtra = file;   
                 elif(filename == 'timevideo.csv'):                    
                     tagFileVideo = file;
                 elif(filename == 'tags.csv'):                    
@@ -271,10 +316,7 @@ class FlowChartGame(QtGui.QMainWindow):
                 elif filename == 'EDA.csv':
                     self.fileEDA = file; 
                 elif ("EMOCAO") in filename:
-                    self.fileEmotion = file; 
-                               
-            
-            
+                    self.fileEmotion = file;            
             
             if tagFileVideo:
                 self.setTagVideo(tagFileVideo);
@@ -293,10 +335,11 @@ class FlowChartGame(QtGui.QMainWindow):
             else: 
                 QMessageBox.information(self, "Message", "Error in Loading Media: Screen Capture video not found");
                 return False;
-            if videoWC:
-                self.openFile(videoWC)
+            
+            if videoExtra:
+                self.openFile(videoExtra)
             else: 
-                QMessageBox.information(self, "Message", "Error in Loading Media: video not found");
+                QMessageBox.information(self, "Message", "Error Loading Media: Face or hand's video Not Found");
                 return False;
             
             if(self.fileBVP or self.fileEDA or self.fileEmotion):
@@ -331,31 +374,7 @@ class FlowChartGame(QtGui.QMainWindow):
         self.PlotEmotion(self.fileEmotion)
         self.PlotHRFromBVP(self.fileBVP)
         self.PlotEda(self.fileEDA)
-    
-    def setTags(self,path):
-       
-        global arrayTagsInitial;
-        global arrayTagsEnd;
-
-        try:
-            sd = SourceData()
-            tags = sd.LoadDataTags(path)
-            if(len(tags) % 2 == 1  ):
-                QMessageBox.information(self, "Message", "There is only one Tag");
-                print("There is only one Tag");
-                sys.exit(app.exec_());   
-            elif (len(tags) % 2 == 0 ):
-                arrayTagsInitial = tags[0::2];
-                arrayTagsEnd = tags[1::2];
-                self.setConfigureTimeInterval(arrayTagsInitial[0], arrayTagsEnd[0]);
-            else: 
-                QMessageBox.information(self, "Message", "There should be two Tags");
-                print("There should be two Tags");
-                sys.exit(app.exec_()); 
-        except:
-            print("Erro during Loading Tags")
-            sys.exit(app.exec_());
-    
+        
     def setConfigureTimeInterval(self,initialTime,endTime):
         self.timeTagInitial = initialTime;
         self.timeTagEnd = endTime;
@@ -373,16 +392,38 @@ class FlowChartGame(QtGui.QMainWindow):
         timeLabel2.setText(time) 
         return time;
     
+    def setTags(self,path):
+       
+        global arrayTagsInitial;
+        global arrayTagsEnd;
+
+        try:
+            sd = SourceData()
+            tags = sd.LoadDataTags(path)
+            if(len(tags) == 0):
+                QMessageBox.information(self, "Message", "Does not exist tags");
+                print("Does not exist tags");
+                sys.exit(app.exec_()); 
+            elif(len(tags) % 2 == 1  ):
+                QMessageBox.information(self, "Message", "No match between Tags");
+                print("No match between Tags");
+                sys.exit(app.exec_());   
+            elif (len(tags) % 2 == 0 ):
+                arrayTagsInitial = tags[0::2];
+                arrayTagsEnd = tags[1::2];
+                self.setConfigureTimeInterval(arrayTagsInitial[0], arrayTagsEnd[0]);
+            
+        except:
+            print("Erro during Loading Tags")
+            sys.exit(app.exec_());
+            
     def setTagVideo(self,path):
         global timeVideo;
         try:
             f = open(path, "r")
-            timeVideo = float(f.read());
-            #self.positionInitialSession = UnixTime().diffTimeStamp(timeVideo,self.timeTagInitial)*1000  
-            
+            timeVideo = float(f.read());           
         except:
-            QMessageBox.information(self, "Message", "Erro during Loading Video Tag");
-
+            QMessageBox.information(self, "Message", "Error during Loading Video Tag");
             print("Erro during Loading Video Tag")
             sys.exit(app.exec_());
             
@@ -605,7 +646,6 @@ class FlowChartGame(QtGui.QMainWindow):
         positionRangeSlider.endValueChanged.connect(self.eventChangeRightRangeValue)
         positionRangeSlider.startValueChanged.connect(self.eventChangeLeftRangeValue)
         self.forceDisconnectRangeSlider = False;                
-
     
     def eventChangeRightRangeValue(self, index):
         
@@ -656,6 +696,8 @@ class FlowChartGame(QtGui.QMainWindow):
     def PlotEda(self, path):    
         print("PlotEda")   
        
+        if(not path):
+            return
         global ts;
         global metricsEDA;
         global plotEDA
@@ -749,7 +791,8 @@ class FlowChartGame(QtGui.QMainWindow):
         self.isCreatedPlotHR = True;
     
     def PlotHRFromBVP(self, path):
-        
+        if(not path):#If not exist file then dont loading
+            return;
        
         sd = SourceData()
         count, data, startTime, endTime, samplingRate = sd.LoadDataBVP(path)       
@@ -771,56 +814,77 @@ class FlowChartGame(QtGui.QMainWindow):
    
     def PlotEmotion(self,url):
         print("PlotEmotion")
-        global plotEmotion;
+        if(not url):#If not exist file then dont loading
+            return;
+            
+        #global plotEmotion;
         try:
             
             js = SourceData()
             df = js.LoadDataFacialExpression(indexSession=None, path=url);
             
-            df1 = df[['Happiness','Surprise','Fear']].copy()
-            df2 = df[['Sadness','Anger','Disgust']].copy()
+            
            
-            var = ReduceEmotion()
-            arrayPCA_Positive = var.runPCA(df1)
-            arrayPCA_Negative = var.runPCA(df2)  
                      
-            d1 = list(zip(df['Time'],arrayPCA_Positive,arrayPCA_Negative))        
-            dataframe = pd.DataFrame(d1,columns=['tsEmotion','arrayPCA1','arrayPCA2'])   
+            d1 = list(zip(df['Time'],df['Happiness'],df['Sadness'],df['Anger'],
+                                     df['Surprise'],df['Fear'],df['Disgust']))        
+            dataframe = pd.DataFrame(d1,columns=['tsEmotion','Happiness','Sadness',
+                                                 "Anger","Surprise","Fear",'Disgust'])   
             
             #Cut in time
             dataframe = dataframe[(dataframe['tsEmotion'] >=  UnixTime().run(self.timeTagInitial)) & 
                                   (dataframe['tsEmotion'] <= UnixTime().run(self.timeTagEnd))]
     
-            arrayPCA1  = dataframe['arrayPCA1'].tolist()
-            arrayPCA2  = dataframe['arrayPCA2'].tolist()
+            array1  = dataframe['Happiness'].tolist()
+            array2  = dataframe['Sadness'].tolist()
+            array3  = dataframe['Anger'].tolist()
+            array4  = dataframe['Surprise'].tolist()
+            array5  = dataframe['Fear'].tolist()
+            array6  = dataframe['Disgust'].tolist()
+            
             tsEmotion = [datetime.timestamp(dt) for dt in dataframe['tsEmotion']]
            
             if(self.isCreatedPlotEmotion):
-                plotEmotion.clear()
+                #plotEmotion.clear()
                 pwEmotion.clear();
-            
-            plotEmotion = pwEmotion.plot(title="Emotion", pen='b')            
+                
+                   
             if(not self.isCreatedPlotEmotion):
-                pwEmotion.getPlotItem().addLegend()            
-                pwEmotion.addItem(pg.PlotDataItem(pen='b', name='Positive Value', antialias=False))
+                pwEmotion.addLegend((50,60), offset=(30,30)) 
                 pwEmotion.getPlotItem().getViewBox().setMouseMode(pg.ViewBox.RectMode)
                 axis = DateAxis(orientation='bottom')
-                axis.attachToPlotItem(pwEmotion.getPlotItem())                   
-            plotEmotion.setData(x=tsEmotion, y=arrayPCA1)
+                axis.attachToPlotItem(pwEmotion.getPlotItem()) 
             
-            
-            plotEmotion = pwEmotion.plot(title="Emotion", pen='r')
-            if(not self.isCreatedPlotEmotion):
-                pwEmotion.addItem(pg.PlotDataItem(pen='r', name='Negative Value', antialias=False))
-            plotEmotion.setData(x=tsEmotion, y=arrayPCA2)
+            #b: blue,g: green,r: red,c: cyan,m: magenta,y: yellow,k: black,w: white
+            for nameEmotion in self._listEmotion:
+                if(nameEmotion == 'Happiness'):
+                    plotEmotion = pwEmotion.plot(title='Happiness',pen='b',name='Happiness')                           
+                    plotEmotion.setData(x=tsEmotion, y=array1)  
+                if(nameEmotion == 'Sadness'):  
+                    plotEmotion = pwEmotion.plot(title='Sadness',pen='c',name='Sadness')
+                    plotEmotion.setData(x=tsEmotion, y=array2)
+                if(nameEmotion == 'Anger'): 
+                    plotEmotion = pwEmotion.plot(title='Anger',pen='y',name='Anger')
+                    plotEmotion.setData(x=tsEmotion, y=array3)
+                if(nameEmotion == 'Surprise'):
+                    plotEmotion = pwEmotion.plot(title='Surprise',pen='g',name='Surprise')
+                    plotEmotion.setData(x=tsEmotion, y=array4)
+                if(nameEmotion == 'Fear'):
+                    plotEmotion = pwEmotion.plot(title='Fear',pen='k',name='Fear')
+                    plotEmotion.setData(x=tsEmotion, y=array5)
+                if(nameEmotion == 'Disgust'):
+                    plotEmotion = pwEmotion.plot(title='Disgust',pen='m',name='Disgust')
+                    plotEmotion.setData(x=tsEmotion, y=array6)           
             
             #Plot was created
-            self.lrBVP = pg.LinearRegionItem([tsEmotion[0], tsEmotion[len(tsEmotion)-1]],bounds=[tsEmotion[0], tsEmotion[len(tsEmotion)-1]])  
-            self.lrBVP.setZValue(-10)  
-            pwEmotion.addItem(self.lrBVP) 
-            self.lrBVP.setRegion([tsEmotion[0],tsEmotion[0]])
+            self.lrEmotion = pg.LinearRegionItem([tsEmotion[0], tsEmotion[len(tsEmotion)-1]],bounds=[tsEmotion[0], tsEmotion[len(tsEmotion)-1]])  
+            self.lrEmotion.setZValue(-10)  
+            pwEmotion.addItem(self.lrEmotion) 
+            self.lrEmotion.setRegion([tsEmotion[0],tsEmotion[0]])
             
             self.isCreatedPlotEmotion= True;
+            self._listEmotion = ['Happiness','Sadness','Anger',
+                      'Fear','Surprise','Disgust']
             return True;
         except: 
             print("Oops!",sys.exc_info()[0],"occured.")
@@ -829,23 +893,41 @@ class FlowChartGame(QtGui.QMainWindow):
  
     def clearLinearRegion(self):
         ut = UnixTime();
-
         indexInitial = datetime.timestamp(ut.time_inc(self.timeTagInitial,0))
-        self.lrEDA.setRegion([indexInitial,indexInitial])
-        self.lrBVP.setRegion([indexInitial,indexInitial])  
-        self.lrHR.setRegion([indexInitial,indexInitial]) 
+        self.printRegion(indexInitial,indexInitial)        
             
     def addLinearRegionInPlotWidget(self):
         if self.mediaPlayer.state() != QMediaPlayer.PausedState:
-
             ut = UnixTime();
             indexInitial = datetime.timestamp(ut.time_inc(self.timeTagInitial, 
                                                           positionRangeSlider.start()-self.positionInitialSession))
-            indexEnd =  datetime.timestamp(ut.time_reduce(self.timeTagEnd, positionEndSession-positionRangeSlider.end()))
-            self.lrEDA.setRegion([indexInitial,indexEnd])
-            self.lrBVP.setRegion([indexInitial,indexEnd])            
-            self.lrHR.setRegion([indexInitial,indexEnd]) 
-       
+            indexEnd =  datetime.timestamp(ut.time_reduce(self.timeTagEnd, 
+                                                          positionEndSession-positionRangeSlider.end()))
+            
+            self.printRegion(indexInitial, indexEnd) 
+                
+    def printRegion(self,indexInitial,indexEnd):
+        try:
+            if(self.isCreatedPlotEda):
+                self.lrEDA.setRegion([indexInitial,indexEnd])
+            if(self.isCreatedPlotHR):
+                self.lrHR.setRegion([indexInitial,indexEnd]) 
+            if(self.isCreatedPlotEmotion):            
+                self.lrEmotion.setRegion([indexInitial,indexEnd])         
+        except ValueError:
+            print('Non-numeric data found in the file.')           
+        except EOFError:
+            print('Why did you do an EOF on me?')      
+        except:            
+            print('Linear Region null') 
+    
+    def paintEvent(self, event):
+
+        qp = QtGui.QPainter()
+        qp.begin(self)
+        #print("XXX")
+        qp.end()
+    
     def is_video_file(self,filename):
         video_file_extensions = (
 '.264', '.3g2', '.3gp', '.3gp2', '.3gpp', '.3gpp2', '.3mm', '.3p2', '.60d', '.787', '.avi', '.dv-avi', 

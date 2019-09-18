@@ -17,7 +17,9 @@ class TableView(QTableWidget):
         self.setSelectionMode(QAbstractItemView.SingleSelection)
         self.setSelectionBehavior(QAbstractItemView.SelectRows)
         #self#.show()
- 
+    def setModeMultiple(self):
+        self.setSelectionMode(QAbstractItemView.MultiSelection)
+        self.setSelectionBehavior(QAbstractItemView.SelectRows)
     def setData(self): 
         horHeaders = []
         item1 = QTableWidgetItem()
