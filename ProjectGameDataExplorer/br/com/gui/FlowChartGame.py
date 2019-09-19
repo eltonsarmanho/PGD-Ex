@@ -4,41 +4,30 @@ Created on 15 de abr de 2019
 
 @author: eltonss
 '''
-
-from PyQt5 import QtCore, QtGui, QtWidgets, uic
-from pyqtgraph.Qt import QtCore, QtGui, PYSIDE
-import pandas as pd
-import numpy as np
-import sys, os
-
 import matplotlib
-from br.com.analytic.reduceFeatures.ReduceEmotion import ReduceEmotion
-from br.com.gui.TableView import TableView
 
-
-matplotlib.use('Agg')
-
-from br.com.util.SourceData import SourceData
-from br.com.util.ProcessingData import ProcessingData
-
-from br.com.util.EmpaticaHRV import EmpaticaHRV
-from br.com.util.EDAPeakDetectionScript import EDAPeakDetectionScript
-matplotlib.use('Agg')
-
-from PyQt5.QtCore import  pyqtSignal
-from PyQt5.QtCore import  QTime
-from PyQt5.QtGui import QIcon, QPixmap, QBrush, QColor, QSlider
-from PyQt5.QtWidgets import QWidget,  QSplitter,QStyle
 from PyQt5.QtCore import  Qt, QUrl
-from PyQt5.QtWidgets import QMessageBox
 from PyQt5.QtMultimedia import QMediaContent, QMediaPlayer
 from PyQt5.QtMultimediaWidgets import QVideoWidget
-from br.com.gui.qrangeslider import QRangeSlider
-import pyqtgraph as pg
-from br.com.util.UnixTime import UnixTime
-from br.com.gui.DateAxis import DateAxis
+from PyQt5.QtWidgets import QMessageBox
+from PyQt5.QtWidgets import QWidget, QStyle
 from datetime import datetime
-from br.com.gui.TimeWidget import TimeWidget
+from pyqtgraph.Qt import QtCore, QtGui
+import sys, os
+matplotlib.use('Agg')
+
+from br.com.gui.DateAxis import DateAxis
+from br.com.gui.TableView import TableView
+from br.com.gui.qrangeslider import QRangeSlider
+from br.com.util.EDAPeakDetectionScript import EDAPeakDetectionScript
+from br.com.util.EmpaticaHRV import EmpaticaHRV
+from br.com.util.ProcessingData import ProcessingData
+from br.com.util.SourceData import SourceData
+from br.com.util.UnixTime import UnixTime
+import numpy as np
+import pandas as pd
+import pyqtgraph as pg
+
 matplotlib.use('Agg')
 
 
@@ -817,15 +806,11 @@ class FlowChartGame(QtGui.QMainWindow):
         if(not url):#If not exist file then dont loading
             return;
             
-        #global plotEmotion;
         try:
             
             js = SourceData()
             df = js.LoadDataFacialExpression(indexSession=None, path=url);
-            
-            
-           
-                     
+                                 
             d1 = list(zip(df['Time'],df['Happiness'],df['Sadness'],df['Anger'],
                                      df['Surprise'],df['Fear'],df['Disgust']))        
             dataframe = pd.DataFrame(d1,columns=['tsEmotion','Happiness','Sadness',
@@ -844,13 +829,17 @@ class FlowChartGame(QtGui.QMainWindow):
             
             tsEmotion = [datetime.timestamp(dt) for dt in dataframe['tsEmotion']]
            
-            if(self.isCreatedPlotEmotion):
-                #plotEmotion.clear()
+            if(self.isCreatedPlotEmotion):                   
                 pwEmotion.clear();
                 
-                   
             if(not self.isCreatedPlotEmotion):
                 pwEmotion.addLegend((50,60), offset=(30,30)) 
+                pwEmotion.addItem(pg.PlotDataItem(pen='b', name='Happiness', antialias=False))
+                pwEmotion.addItem(pg.PlotDataItem(pen='b', name='Sadness', antialias=False))
+                pwEmotion.addItem(pg.PlotDataItem(pen='b', name='Anger', antialias=False))
+                pwEmotion.addItem(pg.PlotDataItem(pen='b', name='Surprise', antialias=False))
+                pwEmotion.addItem(pg.PlotDataItem(pen='b', name='Fear', antialias=False))
+                pwEmotion.addItem(pg.PlotDataItem(pen='b', name='Disgust', antialias=False))
                 pwEmotion.getPlotItem().getViewBox().setMouseMode(pg.ViewBox.RectMode)
                 axis = DateAxis(orientation='bottom')
                 axis.attachToPlotItem(pwEmotion.getPlotItem()) 
@@ -858,26 +847,27 @@ class FlowChartGame(QtGui.QMainWindow):
             #b: blue,g: green,r: red,c: cyan,m: magenta,y: yellow,k: black,w: white
             for nameEmotion in self._listEmotion:
                 if(nameEmotion == 'Happiness'):
-                    plotEmotion = pwEmotion.plot(title='Happiness',pen='b',name='Happiness')                           
+                    plotEmotion = pwEmotion.plot(title='Happiness',pen='b')                           
                     plotEmotion.setData(x=tsEmotion, y=array1)  
                 if(nameEmotion == 'Sadness'):  
-                    plotEmotion = pwEmotion.plot(title='Sadness',pen='c',name='Sadness')
+                    plotEmotion = pwEmotion.plot(title='Sadness',pen='c')
                     plotEmotion.setData(x=tsEmotion, y=array2)
                 if(nameEmotion == 'Anger'): 
-                    plotEmotion = pwEmotion.plot(title='Anger',pen='y',name='Anger')
+                    plotEmotion = pwEmotion.plot(title='Anger',pen='y')
                     plotEmotion.setData(x=tsEmotion, y=array3)
                 if(nameEmotion == 'Surprise'):
-                    plotEmotion = pwEmotion.plot(title='Surprise',pen='g',name='Surprise')
+                    plotEmotion = pwEmotion.plot(title='Surprise',pen='g')
                     plotEmotion.setData(x=tsEmotion, y=array4)
                 if(nameEmotion == 'Fear'):
-                    plotEmotion = pwEmotion.plot(title='Fear',pen='k',name='Fear')
+                    plotEmotion = pwEmotion.plot(title='Fear',pen='k')
                     plotEmotion.setData(x=tsEmotion, y=array5)
                 if(nameEmotion == 'Disgust'):
-                    plotEmotion = pwEmotion.plot(title='Disgust',pen='m',name='Disgust')
+                    plotEmotion = pwEmotion.plot(title='Disgust',pen='m')
                     plotEmotion.setData(x=tsEmotion, y=array6)           
-            
+
             #Plot was created
-            self.lrEmotion = pg.LinearRegionItem([tsEmotion[0], tsEmotion[len(tsEmotion)-1]],bounds=[tsEmotion[0], tsEmotion[len(tsEmotion)-1]])  
+            self.lrEmotion = pg.LinearRegionItem([tsEmotion[0], tsEmotion[len(tsEmotion)-1]],
+                                                 bounds=[tsEmotion[0], tsEmotion[len(tsEmotion)-1]])  
             self.lrEmotion.setZValue(-10)  
             pwEmotion.addItem(self.lrEmotion) 
             self.lrEmotion.setRegion([tsEmotion[0],tsEmotion[0]])
