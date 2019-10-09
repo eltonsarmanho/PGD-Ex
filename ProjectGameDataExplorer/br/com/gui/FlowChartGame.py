@@ -835,15 +835,14 @@ class FlowChartGame(QtGui.QMainWindow):
             if(not self.isCreatedPlotEmotion):
                 pwEmotion.addLegend((50,60), offset=(30,30)) 
                 pwEmotion.addItem(pg.PlotDataItem(pen='b', name='Happiness', antialias=False))
-                pwEmotion.addItem(pg.PlotDataItem(pen='b', name='Sadness', antialias=False))
-                pwEmotion.addItem(pg.PlotDataItem(pen='b', name='Anger', antialias=False))
-                pwEmotion.addItem(pg.PlotDataItem(pen='b', name='Surprise', antialias=False))
-                pwEmotion.addItem(pg.PlotDataItem(pen='b', name='Fear', antialias=False))
-                pwEmotion.addItem(pg.PlotDataItem(pen='b', name='Disgust', antialias=False))
+                pwEmotion.addItem(pg.PlotDataItem(pen='c', name='Sadness', antialias=False))
+                pwEmotion.addItem(pg.PlotDataItem(pen='y', name='Anger', antialias=False))
+                pwEmotion.addItem(pg.PlotDataItem(pen='g', name='Surprise', antialias=False))
+                pwEmotion.addItem(pg.PlotDataItem(pen='k', name='Fear', antialias=False))
+                pwEmotion.addItem(pg.PlotDataItem(pen='m', name='Disgust', antialias=False))
                 pwEmotion.getPlotItem().getViewBox().setMouseMode(pg.ViewBox.RectMode)
                 axis = DateAxis(orientation='bottom')
                 axis.attachToPlotItem(pwEmotion.getPlotItem()) 
-            
             #b: blue,g: green,r: red,c: cyan,m: magenta,y: yellow,k: black,w: white
             for nameEmotion in self._listEmotion:
                 if(nameEmotion == 'Happiness'):
