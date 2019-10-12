@@ -1359,6 +1359,7 @@ class FlowChartGame(QtGui.QMainWindow):
             self.show()
             return vertSplitter;
         
+        
         def closeEvent(self, *args, **kwargs):
             FlowChartGame.reset(self.obj)
             return QWidget.closeEvent(self, *args, **kwargs)
