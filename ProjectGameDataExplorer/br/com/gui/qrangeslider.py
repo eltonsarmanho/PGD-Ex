@@ -1,6 +1,5 @@
 import sys, os
 from PyQt5 import QtCore, QtGui, QtWidgets
-from statsmodels.tsa.statespace.tests.test_pickle import true
 
 __all__ = ['QRangeSlider']
 

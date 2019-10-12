@@ -1,12 +1,5 @@
 import pyqtgraph as pg
-from pyqtgraph.Qt import QtCore, QtGui
-import numpy as np
-import time
-from pyqtgraph.Qt import QtGui, QtCore
-import numpy as np
-import pyqtgraph as pg
-from PyQt5.QtCore import QTime, QTimer
-import datetime
+
 
 import numpy
 from pyqtgraph import AxisItem
