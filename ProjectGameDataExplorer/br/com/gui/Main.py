@@ -17,7 +17,6 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 
 from datetime import datetime
 from pyqtgraph import AxisItem
-from pyqtgraph.Qt import QtCore, QtGui
 import sys, os
 import math
 import numpy
@@ -99,6 +98,7 @@ class FlowChartGame(QtGui.QMainWindow):
         pg.setConfigOption('background', 'w')
         pg.setConfigOption('foreground', 'k')
         self._SD = self.SourceData()
+
         self.createMediaPlayer();
         self.windowPlots()
         
@@ -297,18 +297,25 @@ class FlowChartGame(QtGui.QMainWindow):
         elif(q.text() == "Reset Progress Bar Timer"):
             self.reset()
         elif (q.text() == 'Annotation'):
-            self._ANNOTATION = True  
-            cwd = os.getcwd()
-            url = cwd.replace('gui', 'data/')
-            tagsEmotion = open(url + "tagsEmotionAnn.csv", "r")
-            tagsActions = open(url + "tagsActionsAnn.csv", "r")
-
-            self.openButtonsEmotions(tagsEmotion)
-            self.openButtonsActions(tagsActions)
-                        
-            self.getWindowsAnnotation()
-            self.splitter.setSizes([0, 1])
-            self.uiMainPanelAnnotation() 
+            try:
+                self._ANNOTATION = True  
+                #cwd = os.getcwd()
+                #print(cwd)
+                #url = cwd.replace('gui', 'data/')
+                
+                tagsEmotion = open("br/com/data/tagsEmotionAnn.csv", "r")
+                tagsActions = open("br/com/data/tagsActionsAnn.csv", "r")
+    
+                self.openButtonsEmotions(tagsEmotion)
+                self.openButtonsActions(tagsActions)
+                            
+                self.getWindowsAnnotation()
+                self.splitter.setSizes([0, 1])
+                self.uiMainPanelAnnotation()
+            except: 
+                print("Oops!", sys.exc_info()[0], "occured.")
+                print("Erro in Annotation")
+             
         pass;  
    
     def reset (self):
