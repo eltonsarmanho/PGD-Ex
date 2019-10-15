@@ -532,7 +532,7 @@ class FlowChartGame(QtGui.QMainWindow):
         self.buttonsEmotions = []
         index = 0
 
-        print("num emotions: " + str(len(self.emotions)))
+        #print("num emotions: " + str(len(self.emotions)))
 
         for n in range(len(self.emotions)):
             self.buttonsEmotions.append(QCheckBox(self.emotions[index]))
@@ -568,7 +568,7 @@ class FlowChartGame(QtGui.QMainWindow):
         confirmButton.setCheckable(True)
         confirmButton.clicked.connect(lambda:self.eventBtstateAn(3))
 
-        layout.addWidget(confirmButton)
+        #layout.addWidget(confirmButton)
         
         bottom.setLayout(layout)
         bottom.setFrameShape(QtGui.QFrame.StyledPanel)
@@ -577,7 +577,8 @@ class FlowChartGame(QtGui.QMainWindow):
         splitter = QtGui.QSplitter(Qt.Vertical)
         splitter.addWidget(top)
         splitter.addWidget(bottom)
-        splitter.setSizes([100, 100])
+        splitter.addWidget(confirmButton)
+        splitter.setSizes([100, 100,100])
         
         vbox = QtGui.QHBoxLayout()        
         
