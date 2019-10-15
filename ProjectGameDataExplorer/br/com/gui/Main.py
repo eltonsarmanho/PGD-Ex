@@ -303,6 +303,7 @@ class FlowChartGame(QtGui.QMainWindow):
                 #print(cwd)
                 #url = cwd.replace('gui', 'data/')
                 
+                
                 tagsEmotion = open("br/com/data/tagsEmotionAnn.csv", "r")
                 tagsActions = open("br/com/data/tagsActionsAnn.csv", "r")
     
