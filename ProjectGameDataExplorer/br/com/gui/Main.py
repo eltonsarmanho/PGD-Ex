@@ -299,16 +299,9 @@ class FlowChartGame(QtGui.QMainWindow):
         elif (q.text() == 'Annotation'):
             try:
                 self._ANNOTATION = True  
-                #cwd = os.getcwd()
-                #print(cwd)
-                #url = cwd.replace('gui', 'data/')
-                
-                
-                tagsEmotion = open("br/com/data/tagsEmotionAnn.csv", "r")
-                tagsActions = open("br/com/data/tagsActionsAnn.csv", "r")
-    
-                self.openButtonsEmotions(tagsEmotion)
-                self.openButtonsActions(tagsActions)
+                  
+                self.openButtonsEmotions()
+                self.openButtonsActions()
                             
                 self.getWindowsAnnotation()
                 self.splitter.setSizes([0, 1])
@@ -733,29 +726,30 @@ class FlowChartGame(QtGui.QMainWindow):
         texto_csv = "{0};{1};{2};{3}".format(initTime,endTime,emo,act);
         return  ( texto,texto_csv )
 
-    def openButtonsEmotions(self, file):
+    def openButtonsEmotions(self):
             self.selectedEmotion = 'none'
             try:
-                numTags = int(file.readline())
-                self.emotions = []
-                self.emotions.append("Nothing")
-                for n in range(numTags):
-                    self.emotions.append(file.readline().rstrip())
+                
+                self.emotions = ["Nenhum","Raiva","Insuficiencia","Pavor","Tristeza",
+                                 "Suavidade","Nojo","Felicidade","Horror","Furia","Pesar",
+                                 "Nausea","Ansiedade","Descontracao","Desejo","Nervosismo",
+                                 "Solidao","Assustado","Loucura","Satisfacao",
+                                 "Maldisposicao","Vazio","Desejo","Panico",
+                                 "Saudade","Calma","Medo","Tranquilidade",
+                                 "Nojo","Preocupacao","Diversao","Simpatia"]
+                
     
     
             except:
                 print("Erro during Loading Emotion Buttons")
                 sys.exit(app.exec_());
     
-    def openButtonsActions(self, file):
+    def openButtonsActions(self):
         self.selectedAction = 'none'
         try:
-            numTags = int(file.readline())
-            self.actions = []
-            self.actions.append("Nothing")
+            self.actions = ["Nenhum","Batida","Acelerando","Perdendo Posicao","Freio","Ganhando Posicao"]
 
-            for n in range(numTags):
-                self.actions.append(file.readline().rstrip())
+            self.actions.append("Nothing")
 
         except:
             print("Erro during Loading Action Buttons")

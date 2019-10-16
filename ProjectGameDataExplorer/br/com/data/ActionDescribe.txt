@@ -1,0 +1,4 @@
+["Batida","Acelerando","Perdendo Posicao","Freio","Ganhando Posicao"]
+
+
+["Car crash","Speeding up","Braking,"Losing Position,"Gaining Position"] 
