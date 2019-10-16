@@ -147,7 +147,7 @@ class FlowChartGame(QtGui.QMainWindow):
         resetPB.setShortcut("Ctrl+T")
         
         metricEDA = QtGui.QAction("EDA Metrics", self)
-        timeIntervals = QtGui.QAction("(Session) Time Intervals ", self)
+        timeIntervals = QtGui.QAction("Time Intervals (Session) ", self)
         emotionalComponents = QtGui.QAction("Emotional Components", self)
         
         open = QtGui.QAction("Open E4 Data File with Video", self)
