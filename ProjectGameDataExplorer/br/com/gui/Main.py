@@ -571,7 +571,7 @@ class FlowChartGame(QtGui.QMainWindow):
         splitter.addWidget(top)
         splitter.addWidget(bottom)
         splitter.addWidget(confirmButton)
-        splitter.setSizes([100, 100,100])
+        splitter.setSizes([100, 0,25])
         
         vbox = QtGui.QHBoxLayout()        
         
@@ -736,10 +736,8 @@ class FlowChartGame(QtGui.QMainWindow):
                                  "Solidao","Assustado","Loucura","Satisfacao",
                                  "Maldisposicao","Vazio","Desejo","Panico",
                                  "Saudade","Calma","Medo","Tranquilidade",
-                                 "Nojo","Preocupacao","Diversao","Simpatia"]
-                
-    
-    
+                                 "Nojo","Preocupacao","Diversao","Simpatia",
+                                 "Frustacao","Determinacao","Surpresa"]
             except:
                 print("Erro during Loading Emotion Buttons")
                 sys.exit(app.exec_());
