@@ -730,12 +730,15 @@ class FlowChartGame(QtGui.QMainWindow):
             self.selectedEmotion = 'none'
             try:
                 
-                self.emotions = ["Nenhum","Raiva","Insuficiencia","Pavor","Tristeza","Suavidade","Nojo","Felicidade","Horror","Furia","Pesar","Nausea",
+                self.emotions = ["Raiva","Insuficiencia","Pavor","Tristeza","Suavidade","Nojo","Felicidade","Horror","Furia","Pesar","Nausea",
                                 "Ansiedade","Descontracao","Desejo","Nervosismo","Solidao",
                                 "Assustado","Loucura","Satisfacao","Maldisposicao","Vazio",
                                 "Desejo","Panico","Saudade","Calma","Medo","Tranquilidade",
-                                "Nojo","Preocupacao","Diversao","Simpatia","Frustacao","Determinacao","Surpresa",
+                                "Nojo","Preocupacao","Diversao","Simpatia","Frustacao",
+                                "Determinacao","Surpresa",
                                 "Desanimo","Concentracao","Stress"]
+                self.emotions = sorted(self.emotions);
+                self.emotions.insert(0, "Nenhum")
             except:
                 print("Erro during Loading Emotion Buttons")
                 sys.exit(app.exec_());
