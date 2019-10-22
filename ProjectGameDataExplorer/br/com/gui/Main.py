@@ -2219,14 +2219,17 @@ class FlowChartGame(QtGui.QMainWindow):
             return (index,dataset_array,e3data.startTime,e3data.getEndTime(),e3data.samplingRate); 
         
         def LoadDataTags(self,path):
-            e3data = self.E3Data.newE3DataFromFilePath(self,path,"TAGS") 
-            print("Load TAGS Data")
-            index = np.arange(len (e3data.data))
-            dataset_array = []    
-            for item in e3data.data:
-                
-                dataset_array.append((item[0])) 
-            return (dataset_array); 
+            try:
+                e3data = self.E3Data.newE3DataFromFilePath(self,path,"TAGS") 
+                index = np.arange(len (e3data.data))
+                dataset_array = []    
+                for item in e3data.data:
+                    
+                    dataset_array.append((item[0])) 
+                return (dataset_array);
+            except: 
+                print("Oops!", sys.exc_info()[0], "occured.")
+                print("Erro in LoadDataTags")
         class E3Data:
             def __init__(self,dataType,startTime,samplingRate,data):
                 self.dataType = dataType
