@@ -147,7 +147,7 @@ class FlowChartGame(QtGui.QMainWindow):
         resetPB.setShortcut("Ctrl+T")
         
         metricEDA = QtGui.QAction("EDA Metrics", self)
-        timeIntervals = QtGui.QAction("Time Intervals", self)
+        timeIntervals = QtGui.QAction("Time Intervals(Session)", self)
         emotionalComponents = QtGui.QAction("Emotional Components", self)
         
         open = QtGui.QAction("Open E4 Data File with Video", self)
@@ -236,7 +236,7 @@ class FlowChartGame(QtGui.QMainWindow):
             self.win.move(fg.topLeft())
             self.win.show()            
           
-        elif(q.text() == "Time Intervals"):
+        elif(q.text() == "Time Intervals(Session)"):
                 
             ut = self.UnixTime();
             timeLeft = []
@@ -571,7 +571,7 @@ class FlowChartGame(QtGui.QMainWindow):
         splitter.addWidget(top)
         splitter.addWidget(bottom)
         splitter.addWidget(confirmButton)
-        splitter.setSizes([100, 100,100])
+        splitter.setSizes([100, 0,25])
         
         vbox = QtGui.QHBoxLayout()        
         
@@ -730,16 +730,12 @@ class FlowChartGame(QtGui.QMainWindow):
             self.selectedEmotion = 'none'
             try:
                 
-                self.emotions = ["Nenhum","Raiva","Insuficiencia","Pavor","Tristeza",
-                                 "Suavidade","Nojo","Felicidade","Horror","Furia","Pesar",
-                                 "Nausea","Ansiedade","Descontracao","Desejo","Nervosismo",
-                                 "Solidao","Assustado","Loucura","Satisfacao",
-                                 "Maldisposicao","Vazio","Desejo","Panico",
-                                 "Saudade","Calma","Medo","Tranquilidade",
-                                 "Nojo","Preocupacao","Diversao","Simpatia"]
-                
-    
-    
+                self.emotions = ["Raiva","Insuficiencia","Pavor","Tristeza","Suavidade","Nojo","Felicidade","Horror","Furia","Pesar","Nausea",
+                                "Ansiedade","Descontracao","Desejo","Nervosismo","Solidao",
+                                "Assustado","Loucura","Satisfacao","Maldisposicao","Vazio",
+                                "Desejo","Panico","Saudade","Calma","Medo","Tranquilidade",
+                                "Nojo","Preocupacao","Diversao","Simpatia","Frustacao","Determinacao","Surpresa",
+                                "Desanimo","Concentracao","Stress"]
             except:
                 print("Erro during Loading Emotion Buttons")
                 sys.exit(app.exec_());

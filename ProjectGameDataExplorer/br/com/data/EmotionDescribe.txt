@@ -2,7 +2,8 @@
 "Ansiedade","Descontracao","Desejo","Nervosismo","Solidao",
 "Assustado","Loucura","Satisfacao","Maldisposicao","Vazio",
 "Desejo","Panico","Saudade","Calma","Medo","Tranquilidade",
-"Nojo","Preocupacao","Diversao","Simpatia"]
+"Nojo","Preocupacao","Diversao","Simpatia","Frustacao","Determinacao","Surpresa",
+"Desanimo","Concentracao","Stress"]
 
 ["Anger","Wanting","Dread","Sad","Easygoing","Grossed out","Happy","Terror","Rage",
 "Grief","Nausea","Anxiety","Chilled out","Desire","Nervous","Lonely,"Scared","Mad",
