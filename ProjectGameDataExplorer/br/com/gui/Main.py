@@ -742,7 +742,7 @@ class FlowChartGame(QtGui.QMainWindow):
                                  "Nojo", "Repulsa", "Maldisposicao", "Nausea",
                                  "Horror", "Assustado", "Medo","Panico",
                                  "Preocupacao", "Ansiedade","Pavor","Nervosismo",
-                                 "Solidao", "Pesar","Tristeza","Vazio", "Desanimo","Frustacao",
+                                 "Solidao", "Pesar","Tristeza","Vazio", "Desanimo","Frustracao",
                                  "Insuficiencia","Desejo", "Saudade",
                                  "Calma", "Tranquilidade","Descontracao", "Suavidade","Concentracao",
                                  "Felicidade", "Diversao", "Satisfacao","Simpatia"]
