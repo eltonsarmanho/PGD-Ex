@@ -730,13 +730,23 @@ class FlowChartGame(QtGui.QMainWindow):
             self.selectedEmotion = 'none'
             try:
                 
-                self.emotions = ["Raiva","Insuficiencia","Pavor","Tristeza","Suavidade","Nojo","Felicidade","Horror","Furia","Pesar","Nausea",
-                                "Ansiedade","Descontracao","Desejo","Nervosismo","Solidao",
-                                "Assustado","Loucura","Satisfacao","Maldisposicao","Vazio",
-                                "Desejo","Panico","Saudade","Calma","Medo","Tranquilidade",
-                                "Nojo","Preocupacao","Diversao","Simpatia","Frustacao",
-                                "Determinacao","Surpresa",
-                                "Desanimo","Concentracao","Stress"]
+#                 self.emotions = ["Raiva","Insuficiencia","Pavor","Tristeza","Suavidade",
+#                                 "Felicidade","Horror","Furia","Pesar","Nausea",
+#                                 "Ansiedade","Descontracao","Desejo","Nervosismo","Solidao",
+#                                 "Assustado","Loucura","Satisfacao","Maldisposicao","Vazio",
+#                                 "Desejo","Panico","Saudade","Calma","Medo","Tranquilidade",
+#                                 "Nojo","Preocupacao","Diversao","Simpatia","Frustracao",
+#                                 "Determinacao","Surpresa",
+#                                 "Desanimo","Concentracao","Stress"]
+                self.emotions = ["Raiva","Loucura","Furia", "Stress",
+                                 "Nojo", "Repulsa", "Maldisposicao", "Nausea",
+                                 "Horror", "Assustado", "Medo","Panico",
+                                 "Preocupacao", "Ansiedade","Pavor","Nervosismo",
+                                 "Solidao", "Pesar","Tristeza","Vazio", "Desanimo","Frustacao",
+                                 "Insuficiencia","Desejo", "Saudade",
+                                 "Calma", "Tranquilidade","Descontracao", "Suavidade","Concentracao",
+                                 "Felicidade", "Diversao", "Satisfacao","Simpatia"]
+                
                 self.emotions = sorted(self.emotions);
                 self.emotions.insert(0, "Nenhum")
             except:

@@ -1,11 +1,65 @@
-["Nenhum","Raiva","Insuficiencia","Pavor","Tristeza","Suavidade","Nojo","Felicidade","Horror","Furia","Pesar","Nausea",
-"Ansiedade","Descontracao","Desejo","Nervosismo","Solidao",
-"Assustado","Loucura","Satisfacao","Maldisposicao","Vazio",
-"Desejo","Panico","Saudade","Calma","Medo","Tranquilidade",
-"Nojo","Preocupacao","Diversao","Simpatia","Frustacao","Determinacao","Surpresa",
-"Desanimo","Concentracao","Stress"]
+["Raiva","Insuficiencia","Pavor",
+"Tristeza","Suavidade","Nojo","Felicidade",
+"Horror","Furia","Pesar","Nausea",
+"Ansiedade","Descontracao","Desejo",
+"Nervosismo","Solidao","Assustado",
+"Loucura","Satisfacao","Maldisposicao",
+"Vazio","Desejo","Panico",
+"Saudade","Calma","Medo",
+"Tranquilidade","Nojo","Preocupacao",
+"Diversao","Simpatia","Frustacao",
+"Determinacao","Surpresa","Desanimo",
+"Concentracao","Stress"]37
 
-["Anger","Wanting","Dread","Sad","Easygoing","Grossed out","Happy","Terror","Rage",
-"Grief","Nausea","Anxiety","Chilled out","Desire","Nervous","Lonely,"Scared","Mad",
-"Satisfaction","Sickened","Empty","Craving","Panic","Longing","Calm","Fear","Relaxation",
+["Anger","Wanting","Dread",
+"Sad","Easygoing","Grossed out","Happy",
+"Terror","Rage","Grief","Nausea",
+"Anxiety","Chilled out","Desire",
+"Nervous","Lonely,"Scared",
+"Mad","Satisfaction","Sickened",
+"Empty","Craving","Panic","Longing","Calm","Fear","Relaxation",
 "Revulsion","Worry","Enjoyment","Pissed off","Liking"]
+
+Anger subscale (anger, mad, pissed off, rage)(Raiva,Loucura,Furia, Stress)
+Disgust subscale (grossed out, revulsion, sickened, nausea) (Nojo, Repulsa, Maldisposicao, Nausea)
+Fear subscale (terror, scared, fear, panic) (Horror, Assustado, Medo,Panico)
+Anxiety subscale (worry, anxiety, dread, nervous) (Preocupacao, Ansiedade,Pavor,Nervosismo)
+Sadness subscale (lonely, grief, sad, empty) (Solidao, Pesar,Tristeza,Vazio, Desanimo)
+Desire subscale (wanting, craving, longing, desire) (Insuficiencia,Desejo, Saudade)
+Relaxation subscale (calm, relaxation, chilled out, easygoing) (Calma, Tranquilidade,Descontracao, Suavidade)
+Happiness subscale (happy, enjoyment, satisfaction, liking)(Felicidade, Diversao, Satisfacao,Simpatia)
+
+[Frustacao, Determinacao, Concentracao]
+
+Anger - Raiva
+Wanting - Insuficiência
+Dread - Pavor
+Sad - Tristeza
+Easygoing - Suavidade
+Grossed out - Nojo
+Happy - Felicidade
+Terror - Horror
+Rage - Fúria
+Grief - Pesar
+Nausea - Náusea
+Anxiety - Ansiedade
+Chilled out - Descontração
+Desire - Desejo
+Nervous - Nervosismo
+Lonely - Solidão
+Scared - Assustado
+Mad - Loucura
+Satisfaction - Satisfação
+Sickened - Maldisposição
+Empty - Vazio
+Craving - Desejo
+Panic - Pânico
+Longing - Saudade
+Calm - Calma
+Fear - Medo
+Relaxation - Tranquilidade
+Revulsion - Asco
+Worry - Preocupação
+Enjoyment - Diversão
+Pissed off - Fúria
+Liking - Simpatia
