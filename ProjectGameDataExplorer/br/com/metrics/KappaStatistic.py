@@ -9,6 +9,8 @@ import os
 import csv
 import os, fnmatch
 from sklearn.metrics import cohen_kappa_score
+from itertools import chain,repeat,islice,count
+import itertools
 
 class KappaStatistic():
     
@@ -22,7 +24,33 @@ class KappaStatistic():
     def getKappa(self,taskdata):
         ratingtask = agreement.AnnotationTask(data=taskdata)
         return ratingtask.kappa();
-    
+    def responseKappa(self,n_result,half,taskdata):
+        try:
+            t = []
+            txt = []
+            for element in range(0,n_result):
+                t.append(element)
+            for i in range(2,n_result+1):
+                c = list(itertools.combinations(t, i))
+                unq = set(c)            
+                for tuple in (unq):               
+                    rater =[]
+                    for index in tuple:
+                        array = [ [x,y,z] for x, y, z in taskdata if x == str(index)]
+                        if(half in (0,1)):
+                            array = split_list(array,2)[half]
+                            
+                        for element in array:                    
+                            rater.append(element)
+                    kappa = self.getKappa(rater)
+                    responde = "Kappa{0}:{1:.2f}".format(tuple,kappa)
+                    #print(responde)
+                    txt.append(responde)
+            return txt;
+        except:
+            print("Erro Segment {%s} " % half);
+            txt = []
+            return txt;
 if __name__ == '__main__':
     
     def find(pattern, path):
@@ -36,7 +64,11 @@ if __name__ == '__main__':
         length = len(alist)
         return [ alist[i*length // wanted_parts: (i+1)*length // wanted_parts] 
                  for i in range(wanted_parts) ]
-
+    
+    
+    
+    
+    
     group_emotion = dict(
     Asco = 'Nenhum',Nothing ='Nenhum',Nenhum='Nenhum', none='Nenhum',Irritado = 'Raiva',Raiva='Raiva',Loucura='Raiva',Furia='Raiva', Stress='Raiva',
     Nojo='Desgosto', Repulsa='Desgosto', Maldisposicao='Desgosto', Nausea='Desgosto',
@@ -47,11 +79,13 @@ if __name__ == '__main__':
     Determinacao='Desejo',Insuficiencia='Desejo',Desejo='Desejo', Saudade='Desejo',
     Calmo = 'Calma',Calma='Calma', Tranquilidade='Calma',Descontracao='Calma', Suavidade='Calma',Relaxado='Calma',
     Felicidade='Felicidade', Divertido='Felicidade',Diversao='Felicidade', Satisfacao='Felicidade',Simpatia='Felicidade')
-    #print(group_emotion)
+    
+    participante = '/home/eltonss/Documents/Julgamentos/P{}'.format(30)
     for i in range (1,5):
         file_ = 'S{}_*.csv'.format(i)
-        print("Session %s" % (i))
-        result = find(file_, '/home/eltonss/Documents/Julgamentos/P12')    
+        session = 'Session {}'.format(i)
+        print(session)
+        result = find(file_, participante)    
         if(len(result) <= 1):
             continue
         index_rater = 0    
@@ -66,26 +100,22 @@ if __name__ == '__main__':
                     index_response = index_response + 1
             index_rater = index_rater + 1;
         rater =[]
-        half =0
-        print("Half (%s)" % half)
-        for i in range(len(result)):
-            array = [(z) for x, y, z in taskdata if x ==str(i)]
-            if(half in (1,0)):
-                array = split_list(array,2)[half]
-            rater.append(array)
-    
-        #for i in range(len(result)):
-            #print("Resposta do J(%s): %s "%(i,rater[i]))
-        list_value= []
-        for i in range(0,len(result)):
-            for j in range(i+1,len(result)):
-                kappa = cohen_kappa_score(rater[i], rater[j])
-                list_value.append(kappa)
-                #print("Kappa(J%s,J%s) :%.2f" %(i,j,kappa))
-        list_value.sort(reverse=True)
-        print(list_value)
-        kappa = KappaStatistic().getKappa(taskdata)
-        print("[%.2f] %.2f" % (list_value[0],kappa))
-        #print("\n")
+        kappa = KappaStatistic();
+        array1 = kappa.responseKappa(len(result), 2,taskdata);
+        array2 = kappa.responseKappa(len(result), 0,taskdata);
+        array3 = kappa.responseKappa(len(result), 1,taskdata);
+        if(len(array2)==0):
+            array2 = [0] * len(array1)
+        if(len(array3)==0):
+            array3 = [0] * len(array1)
+        c = [array1,array2,array3]      
+                
+        with open(participante+".txt", "a") as file:
+            file.write("{0}\n".format(session))
+            file.write("{}\t                             {}\t                   {}\n".format('Inteira','Metade 1','Metade 2'))      
+            for x in zip(*c):
+                file.write("{0:<8}\t         {1::<8}\t         {2:>8}\n".format(*x))   
+            
+        
 
 
