@@ -23,6 +23,7 @@ import numpy
 from PyQt5.QtGui import QIcon,QAbstractItemView
 
 import scipy.signal as scisig
+from br.com.util.UnixTime import UnixTime
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
@@ -486,7 +487,7 @@ class FlowChartGame(QtGui.QMainWindow):
         try:
             f = open(path, "r")
             timeVideo = float(f.read());           
-
+            print("Time video (GMT): %s" % (UnixTime().runGMT(str(timeVideo))))
 
         except:
             QMessageBox.information(self, "Message", "Error during Loading Video Tag");
