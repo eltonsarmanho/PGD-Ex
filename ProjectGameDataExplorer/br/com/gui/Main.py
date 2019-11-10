@@ -571,7 +571,7 @@ class FlowChartGame(QtGui.QMainWindow):
         splitter.addWidget(top)
         splitter.addWidget(bottom)
         splitter.addWidget(confirmButton)
-        splitter.setSizes([100, 0,25])
+        splitter.setSizes([75,25,25])
         
         vbox = QtGui.QHBoxLayout()        
         
@@ -756,9 +756,10 @@ class FlowChartGame(QtGui.QMainWindow):
     def openButtonsActions(self):
         self.selectedAction = 'none'
         try:
-            self.actions = ["Nenhum","Batida","Acelerando","Perdendo Posicao","Freio","Ganhando Posicao"]
-
-            self.actions.append("Nothing")
+            self.actions = ["Colisao","Acelerando","Perdendo Posicao","Cambio",
+                            "Frenagem","Ganhando Posicao","Drift","Off Road","Roll over"]
+            self.actions = sorted(self.actions);
+            self.actions.insert(0, "Nenhum")
 
         except:
             print("Erro during Loading Action Buttons")
