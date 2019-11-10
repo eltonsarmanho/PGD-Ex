@@ -11,6 +11,7 @@ import os, fnmatch
 from sklearn.metrics import cohen_kappa_score
 from itertools import chain,repeat,islice,count
 import itertools
+import re
 
 class KappaStatistic():
     
@@ -24,7 +25,7 @@ class KappaStatistic():
     def getKappa(self,taskdata):
         ratingtask = agreement.AnnotationTask(data=taskdata)
         return ratingtask.kappa();
-    def responseKappa(self,n_result,half,taskdata):
+    def responseKappa(self,n_result,taskdata,rater_dict):
         try:
             t = []
             txt = []
@@ -35,22 +36,24 @@ class KappaStatistic():
                 unq = set(c)            
                 for tuple in (unq):               
                     rater =[]
+                    names = [];
                     for index in tuple:
-                        array = [ [x,y,z] for x, y, z in taskdata if x == str(index)]
-                        if(half in (0,1)):
-                            array = split_list(array,2)[half]
-                            
+                        names.append(rater_dict[index]); 
+                        array = [ [x,y,z] for x, y, z in taskdata if x == str(index)]                                                 
                         for element in array:                    
                             rater.append(element)
                     kappa = self.getKappa(rater)
-                    responde = "Kappa{0}:{1:.2f}".format(tuple,kappa)
+                
+                    responde = "Kappa{0}:{1:.2f}".format(names,kappa)
                     #print(responde)
                     txt.append(responde)
             return txt;
         except:
-            print("Erro Segment {%s} " % half);
+            print("Erro Segment {%s}");
             txt = []
             return txt;
+    
+    
 if __name__ == '__main__':
     
     def find(pattern, path):
@@ -66,11 +69,9 @@ if __name__ == '__main__':
                  for i in range(wanted_parts) ]
     
     
-    
-    
-    
     group_emotion = dict(
-    Asco = 'Nenhum',Nothing ='Nenhum',Nenhum='Nenhum', none='Nenhum',Irritado = 'Raiva',Raiva='Raiva',Loucura='Raiva',Furia='Raiva', Stress='Raiva',
+    Asco = 'Nenhum',Nothing ='Nenhum',Nenhum='Nenhum', none='Nenhum',
+    Irritado = 'Raiva',Raiva='Raiva',Loucura='Raiva',Furia='Raiva', Stress='Raiva',
     Nojo='Desgosto', Repulsa='Desgosto', Maldisposicao='Desgosto', Nausea='Desgosto',
     Horror='Medo', Assustado='Medo', Medo='Medo',Panico='Medo',
     Surpresa='Ansiedade',Preocupado = 'Ansiedade',Preocupacao='Ansiedade', Ansiedade='Ansiedade',
@@ -80,42 +81,43 @@ if __name__ == '__main__':
     Calmo = 'Calma',Calma='Calma', Tranquilidade='Calma',Descontracao='Calma', Suavidade='Calma',Relaxado='Calma',
     Felicidade='Felicidade', Divertido='Felicidade',Diversao='Felicidade', Satisfacao='Felicidade',Simpatia='Felicidade')
     
-    participante = '/home/eltonss/Documents/Julgamentos/P{}'.format(30)
-    for i in range (1,5):
-        file_ = 'S{}_*.csv'.format(i)
-        session = 'Session {}'.format(i)
-        print(session)
-        result = find(file_, participante)    
-        if(len(result) <= 1):
-            continue
-        index_rater = 0    
-        taskdata =[]
-        for files in result:
-            index_response = 0;
-            with open(files) as csv_file:
-                csv_reader = csv.reader(csv_file, delimiter=';')
-                line_count = 0
-                for row in csv_reader:
-                    taskdata.append([str(index_rater),index_response,group_emotion[str(row[2])]])
-                    index_response = index_response + 1
-            index_rater = index_rater + 1;
-        rater =[]
-        kappa = KappaStatistic();
-        array1 = kappa.responseKappa(len(result), 2,taskdata);
-        array2 = kappa.responseKappa(len(result), 0,taskdata);
-        array3 = kappa.responseKappa(len(result), 1,taskdata);
-        if(len(array2)==0):
-            array2 = [0] * len(array1)
-        if(len(array3)==0):
-            array3 = [0] * len(array1)
-        c = [array1,array2,array3]      
+    array_participant = [2,3,4,5,6,7,8,10,11,12,13,14,15,16,
+                         17,18,19,20,21,22,23,24,25,26,27,28,29,30];
+    for index_participant in array_participant:
+        participante = '/home/eltonss/Documents/Julgamentos/P{}'.format(index_participant)
+        for i in range (1,5):#1.,2,3,4
+            rater_dict = {}
+    
+            file_ = 'S{}_*.csv'.format(i)
+            session = 'Session {}'.format(i)
+            print("Participante {%s} - %s" % (index_participant,session))
+            result = find(file_, participante)    
+            if(len(result) <= 1):
+                continue
+            index_rater = 0    
+            taskdata =[]
+            for files in result:
+                matches = re.findall(r'S{}_(.+?)_P{}'.format(i,index_participant),files)
+                index_response = 0;
+                with open(files) as csv_file:
+                    csv_reader = csv.reader(csv_file, delimiter=';')
+                    line_count = 0
+                    for row in csv_reader:
+                        taskdata.append([str(index_rater),index_response,group_emotion[str(row[2])]])
+                        index_response = index_response + 1
                 
-        with open(participante+".txt", "a") as file:
-            file.write("{0}\n".format(session))
-            file.write("{}\t                             {}\t                   {}\n".format('Inteira','Metade 1','Metade 2'))      
-            for x in zip(*c):
-                file.write("{0:<8}\t         {1::<8}\t         {2:>8}\n".format(*x))   
+                rater_dict[index_rater]  = matches[0]
+                index_rater = index_rater + 1;
+            kappa = KappaStatistic();
+            array1 = kappa.responseKappa(len(result), taskdata,rater_dict);
             
+            c = [array1]      
+                    
+            with open(participante+".txt", "a") as file:
+                file.write("{0}\n".format(session))
+                for x in zip(*c):
+                    file.write("{0:<8}\n".format(*x))   
+                
         
 
 

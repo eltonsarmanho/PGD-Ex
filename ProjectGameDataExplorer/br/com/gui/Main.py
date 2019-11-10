@@ -550,7 +550,7 @@ class FlowChartGame(QtGui.QMainWindow):
             button.setChecked(False)
             button.stateChanged.connect(lambda:self.checkButton(False))
             button.setAutoExclusive(True)
-            layout.addWidget(button, n % 10, n / 10)
+            layout.addWidget(button, n % 5, n / 5)
             self.buttonsActions.append(button)
             index = index + 1
 
