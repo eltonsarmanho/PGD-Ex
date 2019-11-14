@@ -757,7 +757,7 @@ class FlowChartGame(QtGui.QMainWindow):
         self.selectedAction = 'none'
         try:
             self.actions = ["Colisao","Acelerando","Perdendo Posicao","Cambio",
-                            "Frenagem","Ganhando Posicao","Drift","Off Road","Roll over"]
+                            "Frenagem","Ganhando Posicao","Drift","Off Road","Roll over","Car broke down"]
             self.actions = sorted(self.actions);
             self.actions.insert(0, "Nenhum")
 
