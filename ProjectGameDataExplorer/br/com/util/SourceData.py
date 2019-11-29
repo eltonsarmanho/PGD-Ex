@@ -4,11 +4,12 @@ import glob
 
 import numpy as np
 import pandas as pd
-from br.com.util.E3Data import E3Data
+from ProjectGameDataExplorer.br.com.util import E3Data
 
 class SourceData:
        
     def __init__(self):
+        self.E3Data = E3Data;
         print('Constructor SourceData')
        
     
@@ -48,7 +49,7 @@ class SourceData:
         return df;
     
     def LoadDataEDA(self,path):
-        e3data = E3Data.newE3DataFromFilePath(E3Data,path,"EDA") 
+        e3data = self.E3Data.newE3DataFromFilePath(E3Data,path,"EDA") 
         print("Load EDA Data")
         index = np.arange(len (e3data.data))
         dataset_array = []    
@@ -58,7 +59,7 @@ class SourceData:
         return (index,dataset_array,e3data.startTime,e3data.getEndTime(),e3data.samplingRate); 
     
     def LoadDataEDASlice(self,path,startTime,endTime):
-        e3data = E3Data.newE3DataFromFilePath(E3Data,path,"EDA") 
+        e3data = self.E3Data.newE3DataFromFilePath(E3Data,path,"EDA") 
         print("Load Data EDA Slice")
         slice = e3data.getSlide(startTime,endTime)
         index = np.arange(len (slice.data))
@@ -69,7 +70,7 @@ class SourceData:
         return (index,dataset_array,slice.samplingRate); 
     
     def LoadDataHR(self,path):
-        e3data = E3Data.newE3DataFromFilePath(E3Data,path,"HR") 
+        e3data = self.E3Data.newE3DataFromFilePath(E3Data,path,"HR") 
         print("Load HR Data")
         index = np.arange(len (e3data.data))
         dataset_array = []    
@@ -79,7 +80,7 @@ class SourceData:
         return (index,dataset_array,e3data.startTime,e3data.getEndTime(),e3data.samplingRate); 
     
     def LoadDataHRSlice(self,path,startTime,endTime):
-        e3data = E3Data.newE3DataFromFilePath(E3Data,path,"HR") 
+        e3data = self.E3Data.newE3DataFromFilePath(E3Data,path,"HR") 
         index = np.arange(len (e3data.data))
         print(e3data.data)        
         slice = e3data.getSlide(startTime,endTime)
@@ -93,7 +94,7 @@ class SourceData:
         return (index,dataset_array,slice.samplingRate);   
     
     def LoadDataBVP(self,path):
-        e3data = E3Data.newE3DataFromFilePath(E3Data,path,"BVP") 
+        e3data = self.E3Data.newE3DataFromFilePath(E3Data,path,"BVP") 
         print("Load BVP Data")
         index = np.arange(len (e3data.data))
         dataset_array = []    
@@ -104,7 +105,7 @@ class SourceData:
         return (index,dataset_array,e3data.startTime,e3data.getEndTime(),e3data.samplingRate); 
     
     def LoadDataBVPSlice(self,path,startTime,endTime):
-        e3data = E3Data.newE3DataFromFilePath(E3Data,path,"BVP") 
+        e3data = self.E3Data.newE3DataFromFilePath(E3Data,path,"BVP") 
         print("Load BVP Data Slice")
         slice = e3data.getSlide(startTime,endTime)
         index = np.arange(len (slice.data))
@@ -115,7 +116,7 @@ class SourceData:
         return (index,dataset_array,slice.samplingRate);      
     
     def LoadDataTemp(self,path):
-        e3data = E3Data.newE3DataFromFilePath(E3Data,path,"TEMP") 
+        e3data = self.E3Data.newE3DataFromFilePath(E3Data,path,"TEMP") 
         print("Load Temp Data")
         index = np.arange(len (e3data.data))
         dataset_array = []    
@@ -126,7 +127,7 @@ class SourceData:
         return (index,dataset_array,e3data.startTime,e3data.getEndTime(),e3data.samplingRate); 
     
     def LoadDataTags(self,path):
-        e3data = E3Data.newE3DataFromFilePath(E3Data,path,"TAGS") 
+        e3data = self.E3Data.newE3DataFromFilePath(E3Data,path,"TAGS") 
         print("Load TAGS Data")
         index = np.arange(len (e3data.data))
         dataset_array = []    

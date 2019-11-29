@@ -35,7 +35,7 @@ import peakutils
 import biosppy
 from builtins import int
 import glob
-
+import seaborn as sns
 matplotlib.use('Agg')
 import pyphysio as ph
 # import the Signal classes
@@ -742,14 +742,7 @@ class FlowChartGame(QtGui.QMainWindow):
             self.selectedEmotion = 'none'
             try:
                 
-#                 self.emotions = ["Raiva","Insuficiencia","Pavor","Tristeza","Suavidade",
-#                                 "Felicidade","Horror","Furia","Pesar","Nausea",
-#                                 "Ansiedade","Descontracao","Desejo","Nervosismo","Solidao",
-#                                 "Assustado","Loucura","Satisfacao","Maldisposicao","Vazio",
-#                                 "Desejo","Panico","Saudade","Calma","Medo","Tranquilidade",
-#                                 "Nojo","Preocupacao","Diversao","Simpatia","Frustracao",
-#                                 "Determinacao","Surpresa",
-#                                 "Desanimo","Concentracao","Stress"]
+
                 self.emotions = ["Raiva", "Loucura", "Furia", "Stress",
                                  "Nojo", "Repulsa", "Maldisposicao", "Nausea",
                                  "Horror", "Assustado", "Medo", "Panico",
@@ -1052,27 +1045,26 @@ class FlowChartGame(QtGui.QMainWindow):
     def returnInitWindow(self):
             newPosition = self.UnixTime().diffTimeStamp(timeVideo, self.getWindowInit())
             self.setPositionInPlayer(newPosition * 1000)
-            
+           
     def processingMetrics(self):
+        
         # Loading Dataset
-            self.dataset = pd.read_csv("/home/eltonss/Desktop/dataset.csv", sep=',') 
-            # filter = (self.dataset['Player'] == 2) &  (self.dataset['Session'] == 4);
-            P = 4
-            array = [1,2,3,4]
-            _UT = self.UnixTime();
-            for session  in array:
-                filter = ((self.dataset['Player'] == P) & 
+        self.dataset = pd.read_csv("/home/eltonss/Desktop/dataset.csv", sep=',') 
+        P = 4
+        array = [1,2,3,4]
+        _UT = self.UnixTime();
+        for session  in array:
+            filter = ((self.dataset['Player'] == P) & 
                           (self.dataset['Session'] == session));
+            auxi = np.min(self.dataset[filter]['Interval Initial'])
+            auxf = np.max(self.dataset[filter]['Interval Final'])
                 
-                auxi = np.min(self.dataset[filter]['Interval Initial'])
-                auxf = np.max(self.dataset[filter]['Interval Final'])
-                df_emotion = self.processingMetricFaceEmotion(auxi, auxf, P, session)
-                df_BVP = self.processingMetricBVP(auxi, auxf, P, session)          
-                df_EDA = self.processingMetricEDA(auxi, auxf, P, session)
-                df = df_emotion.join(df_EDA).join((df_BVP))
-                #df = df.shift(1, axis=1) 
-                url = '/home/eltonss/Desktop/Resultados/MetricsP{}_S{}.csv'.format(P, session)
-                df.to_csv(url)
+            df_emotion = self.processingMetricFaceEmotion(auxi, auxf, P, session)
+            df_BVP = self.processingMetricBVP(auxi, auxf, P, session)          
+            df_EDA = self.processingMetricEDA(auxi, auxf, P, session)
+            df = df_emotion.join(df_EDA).join((df_BVP))
+            url = '/home/eltonss/Desktop/Resultados/MetricsP{}_S{}.csv'.format(P, session)
+            df.to_csv(url)
 
     def processingMetricFaceEmotion(self, auxi, auxf, participant, session):
            
@@ -1086,8 +1078,6 @@ class FlowChartGame(QtGui.QMainWindow):
                                      df['Surprise'], df['Fear'], df['Disgust']))        
             data = pd.DataFrame(d1, columns=['tsEmotion', 'Happiness', 'Sadness',
                                                  "Anger", "Surprise", "Fear", 'Disgust'])   
-            
-           
             
             startTime = data['tsEmotion'][0]
             sampleRate = 30
