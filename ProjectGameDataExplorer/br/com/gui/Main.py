@@ -7,12 +7,12 @@ Created on 15 de abr de 2019
 
 import matplotlib
 
-from PyQt5.QtCore import  Qt, QUrl,QTime
+from PyQt5.QtCore import  Qt, QUrl, QTime
 from PyQt5.QtMultimedia import QMediaContent, QMediaPlayer
 from PyQt5.QtMultimediaWidgets import QVideoWidget
-from PyQt5.QtWidgets import QMessageBox,QWidget,QSplitter,QStyle, QCheckBox,QListWidget
-from PyQt5.QtWidgets import QMainWindow, QApplication, QWidget, QAction, QTableWidget,QTableWidgetItem,QVBoxLayout
-from PyQt5.QtCore import pyqtSlot,Qt
+from PyQt5.QtWidgets import QMessageBox, QWidget, QSplitter, QStyle, QCheckBox, QListWidget
+from PyQt5.QtWidgets import QMainWindow, QApplication, QWidget, QAction, QTableWidget, QTableWidgetItem, QVBoxLayout
+from PyQt5.QtCore import pyqtSlot, Qt
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 from datetime import datetime
@@ -20,7 +20,7 @@ from pyqtgraph import AxisItem
 import sys, os
 import math
 import numpy
-from PyQt5.QtGui import QIcon,QAbstractItemView
+from PyQt5.QtGui import QIcon, QAbstractItemView
 
 import scipy.signal as scisig
 matplotlib.use('Agg')
@@ -37,6 +37,18 @@ from builtins import int
 import glob
 
 matplotlib.use('Agg')
+import pyphysio as ph
+# import the Signal classes
+from pyphysio import EvenlySignal, UnevenlySignal
+# import data from included examples
+from pyphysio.tests import TestData   
+# create a signal
+# create a Filter
+import pyphysio.filters.Filters as flt
+import pyphysio.estimators.Estimators as est
+
+import pyphysio.indicators.TimeDomain as td_ind
+import pyphysio.indicators.FrequencyDomain as fd_ind
 
 __all__ = ['QRangeSlider']
     
@@ -81,9 +93,9 @@ class FlowChartGame(QtGui.QMainWindow):
     _FILE_PATH_SESSION = "";
     _VIDEO_SC = ""
     _VIDEO_EXTRA = ""
-    _TAG_FILE_VIDEO =""
+    _TAG_FILE_VIDEO = ""
     _TAG_FILE = ""
-    _EVALUATOR_NAME =""
+    _EVALUATOR_NAME = ""
     _NUMBER_PARTICIPANT = ""
     _NUMBER_SESSION = ""
     _DISCONNECT_RANGE_SLIDER = False;
@@ -146,7 +158,7 @@ class FlowChartGame(QtGui.QMainWindow):
         resetPB = QtGui.QAction("Reset Progress Bar Timer", self)
         resetPB.setShortcut("Ctrl+T")
         
-        metricEDA = QtGui.QAction("EDA Metrics", self)
+        metricEDA = QtGui.QAction("Extract Metrics", self)
         timeIntervals = QtGui.QAction("Time Intervals(Session)", self)
         emotionalComponents = QtGui.QAction("Emotional Components", self)
         
@@ -180,16 +192,16 @@ class FlowChartGame(QtGui.QMainWindow):
         self.setLayout(layout)
     
     def processTools(self, q):
-        if(q.text() == "EDA Metrics"):
-           
-            data = {'Metrics':['Mean', 'Median', 'Max', 'Var', 'Std_dev', 'Kurtosis', 'skewness'],
-           'Value': [str(metricsEDA['mean']), str(metricsEDA['median']), str(metricsEDA['max']),
-                    str(metricsEDA['var']), str(metricsEDA['std_dev']),
-                    str(metricsEDA['kurtosis']), str(metricsEDA['skewness'])]}
+        if(q.text() == "Extract Metrics"):
+           self.processingMetrics()
+            # data = {'Metrics':['Mean', 'Median', 'Max', 'Var', 'Std_dev', 'Kurtosis', 'skewness'],
+           # 'Value': [str(metricsEDA['mean']), str(metricsEDA['median']), str(metricsEDA['max']),
+            #        str(metricsEDA['var']), str(metricsEDA['std_dev']),
+            #        str(metricsEDA['kurtosis']), str(metricsEDA['skewness'])]}
           
-            self.tv = self.TableView(data, "EDA Metrics", 7, 2)
+            # self.tv = self.TableView(data, "EDA Metrics", 7, 2)
             
-            self.tv.show()
+            # self.tv.show()
         elif(q.text() == "Emotional Components"):
             _list = ['Happiness', 'Sadness', 'Anger',
                       'Fear', 'Surprise', 'Disgust']
@@ -330,7 +342,7 @@ class FlowChartGame(QtGui.QMainWindow):
     
     def getWindowsAnnotation(self):
         self.currentWindow = 0
-        self.totalWindows = math.ceil((float(self._TIME_TAG_END) - float(self._TIME_TAG_INITIAL))/10)
+        self.totalWindows = math.ceil((float(self._TIME_TAG_END) - float(self._TIME_TAG_INITIAL)) / 10)
         self.windowEffects = []
 
         for i in range(self.totalWindows):
@@ -356,7 +368,7 @@ class FlowChartGame(QtGui.QMainWindow):
 
             for file in filenames:
                 filename = os.path.basename(file)               
-                self._FILE_PATH_SESSION=os.path.dirname(file)
+                self._FILE_PATH_SESSION = os.path.dirname(file)
                 
                 if(not(self.is_video_file(filename) or filename.endswith('.csv'))):
                     QMessageBox.information(self, "Message", "No appropriate file Located");
@@ -402,10 +414,10 @@ class FlowChartGame(QtGui.QMainWindow):
                 QMessageBox.information(self, "Message", "Error Loading Media: Face or hand's video Not Found");
                 return False;
             self.workloadPlot()
-            #if(self._FILE_BVP or self._FILE_EDA or self._FILE_EMOTION):
+            # if(self._FILE_BVP or self._FILE_EDA or self._FILE_EMOTION):
             #   QMessageBox.information(self, "Message", "The files were loaded successfully");
             #    
-            #else: 
+            # else: 
             #    QMessageBox.information(self, "Message", "The Empatica E4 output or Emotion file not found");
             #    return False;
 
@@ -525,7 +537,7 @@ class FlowChartGame(QtGui.QMainWindow):
         self.buttonsEmotions = []
         index = 0
 
-        #print("num emotions: " + str(len(self.emotions)))
+        # print("num emotions: " + str(len(self.emotions)))
 
         for n in range(len(self.emotions)):
             self.buttonsEmotions.append(QCheckBox(self.emotions[index]))
@@ -561,7 +573,7 @@ class FlowChartGame(QtGui.QMainWindow):
         confirmButton.setCheckable(True)
         confirmButton.clicked.connect(lambda:self.eventBtstateAn(3))
 
-        #layout.addWidget(confirmButton)
+        # layout.addWidget(confirmButton)
         
         bottom.setLayout(layout)
         bottom.setFrameShape(QtGui.QFrame.StyledPanel)
@@ -571,7 +583,7 @@ class FlowChartGame(QtGui.QMainWindow):
         splitter.addWidget(top)
         splitter.addWidget(bottom)
         splitter.addWidget(confirmButton)
-        splitter.setSizes([75,25,25])
+        splitter.setSizes([75, 25, 25])
         
         vbox = QtGui.QHBoxLayout()        
         
@@ -671,7 +683,7 @@ class FlowChartGame(QtGui.QMainWindow):
 
         if type == 3:
             # windowEffects[currentWindow] = (currentEffect)
-            texto,csv = self.listNameGenerator(self.currentWindow, 
+            texto, csv = self.listNameGenerator(self.currentWindow,
                                            self.selectedEmotion,
                                            self.selectedAction)
             self.listWidget.item(self.currentWindow).setText(texto)
@@ -690,14 +702,14 @@ class FlowChartGame(QtGui.QMainWindow):
                     self.returnInitWindow()
         
     def exportAffections(self):
-        #_START= datetime.fromtimestamp(float(self._TIME_TAG_INITIAL)).strftime('%H:%M:%S');
-        #_END= datetime.fromtimestamp(float(self._TIME_TAG_END)).strftime('%H:%M:%S');
+        # _START= datetime.fromtimestamp(float(self._TIME_TAG_INITIAL)).strftime('%H:%M:%S');
+        # _END= datetime.fromtimestamp(float(self._TIME_TAG_END)).strftime('%H:%M:%S');
               
-        _NAME = "S{0}_{1}_P{2}.csv".format(self._NUMBER_SESSION,self._EVALUATOR_NAME,self._NUMBER_PARTICIPANT)
-        _FILE = "{0}/{1}".format(self._FILE_PATH_SESSION,_NAME)
-        #_HEADER = "{0},{1},{2},{3}".format("Start","End","Emotion","Action")
+        _NAME = "S{0}_{1}_P{2}.csv".format(self._NUMBER_SESSION, self._EVALUATOR_NAME, self._NUMBER_PARTICIPANT)
+        _FILE = "{0}/{1}".format(self._FILE_PATH_SESSION, _NAME)
+        # _HEADER = "{0},{1},{2},{3}".format("Start","End","Emotion","Action")
         fileAffection = open(_FILE, "w")
-        #fileAffection.write(_HEADER + "\n")
+        # fileAffection.write(_HEADER + "\n")
         for text in self.windowEffects:
             fileAffection.write(text + "\n")
 
@@ -722,9 +734,9 @@ class FlowChartGame(QtGui.QMainWindow):
         t = QTime(hours, minutes, seconds);
         hours2, minutes2, seconds2 = self.getTimeDetails(datetime.fromtimestamp(float(endTime)))
         t2 = QTime(hours2, minutes2, seconds2);  
-        texto = "{0}-{1}|{2}|{3}".format(t.toString(),t2.toString(),emo,act);
-        texto_csv = "{0};{1};{2};{3}".format(initTime,endTime,emo,act);
-        return  ( texto,texto_csv )
+        texto = "{0}-{1}|{2}|{3}".format(t.toString(), t2.toString(), emo, act);
+        texto_csv = "{0};{1};{2};{3}".format(initTime, endTime, emo, act);
+        return  (texto, texto_csv)
 
     def openButtonsEmotions(self):
             self.selectedEmotion = 'none'
@@ -738,14 +750,14 @@ class FlowChartGame(QtGui.QMainWindow):
 #                                 "Nojo","Preocupacao","Diversao","Simpatia","Frustracao",
 #                                 "Determinacao","Surpresa",
 #                                 "Desanimo","Concentracao","Stress"]
-                self.emotions = ["Raiva","Loucura","Furia", "Stress",
+                self.emotions = ["Raiva", "Loucura", "Furia", "Stress",
                                  "Nojo", "Repulsa", "Maldisposicao", "Nausea",
-                                 "Horror", "Assustado", "Medo","Panico",
-                                 "Preocupacao", "Ansiedade","Pavor","Nervosismo",
-                                 "Solidao", "Pesar","Tristeza","Vazio", "Desanimo","Frustracao",
-                                 "Insuficiencia","Desejo", "Saudade",
-                                 "Calma", "Tranquilidade","Descontracao", "Suavidade","Concentracao",
-                                 "Felicidade", "Diversao", "Satisfacao","Simpatia"]
+                                 "Horror", "Assustado", "Medo", "Panico",
+                                 "Preocupacao", "Ansiedade", "Pavor", "Nervosismo",
+                                 "Solidao", "Pesar", "Tristeza", "Vazio", "Desanimo", "Frustracao",
+                                 "Insuficiencia", "Desejo", "Saudade",
+                                 "Calma", "Tranquilidade", "Descontracao", "Suavidade", "Concentracao",
+                                 "Felicidade", "Diversao", "Satisfacao", "Simpatia"]
                 
                 self.emotions = sorted(self.emotions);
                 self.emotions.insert(0, "Nenhum")
@@ -756,8 +768,8 @@ class FlowChartGame(QtGui.QMainWindow):
     def openButtonsActions(self):
         self.selectedAction = 'none'
         try:
-            self.actions = ["Colisao","Acelerando","Perdendo Posicao","Cambio",
-                            "Frenagem","Ganhando Posicao","Drift","Off Road","Roll over","Car broke down"]
+            self.actions = ["Colisao", "Acelerando", "Perdendo Posicao", "Cambio",
+                            "Frenagem", "Ganhando Posicao", "Drift", "Off Road", "Roll over", "Car broke down"]
             self.actions = sorted(self.actions);
             self.actions.insert(0, "Nenhum")
 
@@ -1040,7 +1052,211 @@ class FlowChartGame(QtGui.QMainWindow):
     def returnInitWindow(self):
             newPosition = self.UnixTime().diffTimeStamp(timeVideo, self.getWindowInit())
             self.setPositionInPlayer(newPosition * 1000)
+            
+    def processingMetrics(self):
+        # Loading Dataset
+            self.dataset = pd.read_csv("/home/eltonss/Desktop/dataset.csv", sep=',') 
+            # filter = (self.dataset['Player'] == 2) &  (self.dataset['Session'] == 4);
+            P = 4
+            array = [1,2,3,4]
+            _UT = self.UnixTime();
+            for session  in array:
+                filter = ((self.dataset['Player'] == P) & 
+                          (self.dataset['Session'] == session));
+                
+                auxi = np.min(self.dataset[filter]['Interval Initial'])
+                auxf = np.max(self.dataset[filter]['Interval Final'])
+                df_emotion = self.processingMetricFaceEmotion(auxi, auxf, P, session)
+                df_BVP = self.processingMetricBVP(auxi, auxf, P, session)          
+                df_EDA = self.processingMetricEDA(auxi, auxf, P, session)
+                df = df_emotion.join(df_EDA).join((df_BVP))
+                #df = df.shift(1, axis=1) 
+                url = '/home/eltonss/Desktop/Resultados/MetricsP{}_S{}.csv'.format(P, session)
+                df.to_csv(url)
 
+    def processingMetricFaceEmotion(self, auxi, auxf, participant, session):
+           
+        #try:
+           # loading BVP
+            df = self._SD.LoadDataFacialExpression(indexSession=None,
+                                                   path=self.PATH_EMOTION_FACE);
+            
+            df['Time'] = [datetime.timestamp(dt) for dt in  df['Time']]
+            d1 = list(zip(df['Time'], df['Happiness'], df['Sadness'], df['Anger'],
+                                     df['Surprise'], df['Fear'], df['Disgust']))        
+            data = pd.DataFrame(d1, columns=['tsEmotion', 'Happiness', 'Sadness',
+                                                 "Anger", "Surprise", "Fear", 'Disgust'])   
+            
+           
+            
+            startTime = data['tsEmotion'][0]
+            sampleRate = 30
+            data = data['Happiness'].tolist()            
+            
+            data_emotion = EvenlySignal(values=data,
+                   sampling_freq=sampleRate,
+                   signal_type='emotion',
+                   start_time=startTime) 
+            print("Duration Emotion: %s: " %(data_emotion.get_duration()))
+            print("Start Time: %s" % (startTime))
+            
+    
+            #array1 = dataframe['Happiness'].tolist()
+            #array2 = dataframe['Sadness'].tolist()
+            #array3 = dataframe['Anger'].tolist()
+            #array4 = dataframe['Surprise'].tolist()
+            #array5 = dataframe['Fear'].tolist()
+            #array6 = dataframe['Disgust'].tolist()
+            # Filtering
+            # Detect IBI
+          
+            
+            data_emotion = flt.Normalize('maxmin')(data_emotion)
+            # Select area of interest
+            data_emotion = data_emotion.segment_time(auxi, auxf)
+            print("Duration Emotion: %s: " %(data_emotion.get_duration()))
+            print("Start Time: %s" % (startTime))
+            ax1 = plt.subplot(211)
+            data_emotion.plot()   
+           
+            plt.savefig('/home/eltonss/Pictures/Resultados/Emotion/Emotion{}_S{}.png'.format(participant, session), dpi=600)
+            plt.close()
+            
+            #,,ph.Min,ph.StDev,ph.Range,ph.Median
+            fixed_length = ph.FixedSegments(step=10, width=10)  
+             
+            data_emotion_ind, col_names = ph.fmap(fixed_length,ph.preset_activity(prefix='emotion_'),data_emotion)
+            # col_names[2] = 'LabelBVP'
+            data_emotion_ind_df = pd.DataFrame(data_emotion_ind, columns=col_names)
+            data_emotion_ind_df=data_emotion_ind_df[['label','begin','end','emotion_maximum','emotion_minimum','emotion_mean','emotion_range','emotion_sd']]
+
+            data_emotion_ind_df = data_emotion_ind_df.drop('label', 1)
+            #url = '/home/eltonss/Desktop/Resultados/EmotionMetricsP{}_S{}.csv'.format(participant,session)
+            #data_emotion_ind_df.to_csv(url)
+            return data_emotion_ind_df;
+           
+        #except:
+        #     print("Oops!", sys.exc_info()[0], "occured.")
+        #     print("Erro in processingMetricEmotion")
+          
+    def processingMetricBVP(self, auxi, auxf, participant, session):
+        try:
+        # loading BVP
+            data = pd.read_csv(self.PATH_BVP)            
+           
+            startTime = float(data.columns.values[0])
+            sampleRate = float(data.iloc[0][0])
+            data = data[data.index != 0]
+            data.index = data.index - 1 
+            bvp_data = TestData.bvp()
+            data = [row[0] for row in data.get_values()]
+            bvp = EvenlySignal(values=data,
+                   sampling_freq=sampleRate,
+                   signal_type='bvp',
+                   start_time=startTime) 
+            # Filtering
+            # Detect IBI
+          
+            
+            bvp = bvp.resample(fout=bvp.get_sampling_freq() * 2, kind='cubic')
+            bvp = flt.Normalize('maxmin')(bvp)
+            # Select area of interest
+            #index = [i for i, date in enumerate(bvp.get_times()) 
+            #              if ((date >= auxi) & (date <= auxf)) ] 
+            bvp = bvp.segment_time(auxi, auxf)
+            ibi = est.BeatFromBP()(bvp)
+            
+            ax1 = plt.subplot(211)
+            ibi.plot()   
+            plt.subplot(212)
+            bvp.plot()
+            plt.savefig('/home/eltonss/Pictures/Resultados/BVP/BVP{}_S{}.png'.format(participant, session), dpi=600)
+            plt.close()
+            
+            # id_bad_ibi = ph.BeatOutliers(cache=3, sensitivity=0.25)(ibi)
+            # ibi = ph.FixIBI(id_bad_ibi)(ibi)
+            fixed_length = ph.FixedSegments(step=10, width=10)       
+            TD_HRV_ind, col_names = ph.fmap(fixed_length, ph.preset_hrv_td(), ibi)
+            # col_names[2] = 'LabelBVP'
+            TD_HRV_ind_df = pd.DataFrame(TD_HRV_ind, columns=col_names)
+            TD_HRV_ind_df = TD_HRV_ind_df.drop('begin', 1)
+            TD_HRV_ind_df = TD_HRV_ind_df.drop('end', 1)
+            TD_HRV_ind_df = TD_HRV_ind_df.drop('label', 1)
+            #url = '/home/eltonss/Desktop/Resultados/MetricsBVP.csv'
+            #TD_HRV_ind_df.to_csv(url)
+            return TD_HRV_ind_df;
+            # url = '/home/eltonss/Desktop/Resultados/BVP/BVPmetricsP{}_S{}.csv'.format(participant,session)
+            # TD_HRV_ind_df.to_csv(url)
+        except:
+             print("Oops!", sys.exc_info()[0], "occured.")
+             print("Erro in processingMetricBVP")
+        
+    def processingMetricEDA(self, auxi, auxf, participant, session):
+        print("processingMetricEDA")     
+        
+        try:
+                # loading EDA
+            data = pd.read_csv(PATH_EDA)            
+            
+
+            startTime = float(data.columns.values[0])
+            sampleRate = float(data.iloc[0][0])
+            data = data[data.index != 0]
+            data.index = data.index - 1
+            data = [row[0] for row in data.get_values()]
+            
+
+            eda = EvenlySignal(values=data,
+                   sampling_freq=sampleRate,
+                   signal_type='EDA',
+                   start_time=startTime)
+            print("Durantion(s) of EDA: %s" % (eda.get_duration()))
+            
+            # filtering and normalization : 
+            # remove high frequency noise
+            # resampling : decrease the sampling frequency by cubic interpolation
+            eda = eda.resample(fout=8, kind='cubic')
+            filter = ph.ConvolutionalFilter(irftype='gauss',
+                                            win_len=8 / eda.get_sampling_freq())
+            eda = filter(eda)
+            normalize = flt.Normalize('maxmin')
+            eda = normalize(eda)
+            
+            # Select area of interest
+            #index = [i for i, date in enumerate(eda.get_times()) 
+            #              if ((date >= auxi) & (date <= auxf)) ] 
+            
+            eda = eda.segment_time(auxi, auxf)
+            # create estimator
+            driver = ph.DriverEstim()(eda)        
+                  
+            
+            phasic, tonic, _ = ph.PhasicEstim(delta=0.02)(driver)
+            ax1 = plt.subplot(211)
+            eda.plot()   
+            plt.subplot(212)             
+            phasic.plot()
+            plt.savefig('/home/eltonss/Pictures/Resultados/EDA/edaP{}_S{}.png'.format(participant, session), dpi=600)
+            plt.close()
+            
+            # fixed length windowing
+            fixed_length = ph.FixedSegments(step=10, width=10)       
+            # we use the preset indicators for the phasic signal.
+            # We need to define the minimum amplitude of the peaks that will be considered
+            PHA_ind, col_names = ph.fmap(fixed_length, ph.preset_phasic(delta=0.02), phasic)
+            PHA_ind_df = pd.DataFrame(PHA_ind, columns=col_names)
+      
+            PHA_ind_df = PHA_ind_df.drop('begin', 1)
+            PHA_ind_df = PHA_ind_df.drop('end', 1)
+            #PHA_ind_df = PHA_ind_df.shift(1, axis=1)
+            PHA_ind_df = PHA_ind_df.drop('label', 1)
+            #url = '/home/eltonss/Desktop/Resultados/MetricsEDA.csv'
+            #PHA_ind_df.to_csv(url)
+            return PHA_ind_df
+        except:
+             print("Oops!", sys.exc_info()[0], "occured.")
+             print("Erro in processingMetricEDA")
+        
     def PlotEda(self, path):    
         print("PlotEda")   
        
@@ -1049,16 +1265,18 @@ class FlowChartGame(QtGui.QMainWindow):
         global ts;
         global metricsEDA;
         global plotEDA
-            
+        global RAW_EDA
+        global PATH_EDA
+        PATH_EDA = path  
         _UT = self.UnixTime();
 
         eda = self.EDAPeakDetectionScript(self)
 
-        ts, raw_eda, filtered_eda, peaks, amp = eda.processEDA(path,
+        ts, RAW_EDA, filtered_eda, peaks, amp = eda.processEDA(PATH_EDA,
                                                                _UT.run(self._TIME_TAG_INITIAL),
                                                                _UT.run(self._TIME_TAG_END))
 
-        metricsEDA = self.ProcessingData().getMetricsEDA(raw_eda)
+        
         normalize_data_eda = self.ProcessingData().normalize(filtered_eda)
         
         if(self.isCreatedPlotEda):
@@ -1092,20 +1310,15 @@ class FlowChartGame(QtGui.QMainWindow):
         
         self.isCreatedPlotEda = True;
       
-    def createHR(self, ts_hr, hr, filteredBVP):
+    def createHR(self, segment_filteredBVP):
         print("createHR")    
         global plotHR
-        
-        timeHR =self.UnixTime().timeFrom(self._TIME_TAG_INITIAL, ts_hr)
-        
-        n_array = list(zip(timeHR, hr))        
-        df = pd.DataFrame(n_array, columns=['timeHR', 'hr'])        
-        df['timeHR'] = [datetime.fromtimestamp(ts) for ts in df['timeHR']]  
-        df = df[(df['timeHR'] >= self.UnixTime().run(self._TIME_TAG_INITIAL)) & 
-             (df['timeHR'] <= self.UnixTime().run(self._TIME_TAG_END))]       
-        
-        hr = df['hr'].tolist()
-        timeHR = [datetime.timestamp(dt) for dt in df['timeHR']]
+            
+        HR_DF, HRV_DF = self.processingHR_HRF(segment_filteredBVP,
+                                             self._TIME_TAG_INITIAL,
+                                             self._TIME_TAG_END)
+        segment_hr = HR_DF['hr'].tolist()
+        segmente_timeHR = [datetime.timestamp(dt) for dt in HR_DF['timeHR']]
        
         if(self.isCreatedPlotHR):
             plotHR.clear()
@@ -1122,59 +1335,90 @@ class FlowChartGame(QtGui.QMainWindow):
             axis = self.DateAxis(orientation='bottom')
             axis.attachToPlotItem(pwHR.getPlotItem())
         
-        normalize_data_hr = self.ProcessingData().normalize(df['hr'])
-        plotHR.setData(x=timeHR, y=normalize_data_hr.tolist())
+        normalize_data_hr = self.ProcessingData().normalize(HR_DF['hr'])
+        plotHR.setData(x=segmente_timeHR, y=normalize_data_hr.tolist())
 
         
         plotHR = pwHR.plot(title="HRV", pen='b')
         if(not self.isCreatedPlotHR):
             pwHR.addItem(pg.PlotDataItem(pen='b', name='HRV Value', antialias=False))
-        
-        RRI_DF = self.EmpaticaHRV().getRRI(filteredBVP, self._TIME_TAG_INITIAL, 64)
-        HRV_DF = self.EmpaticaHRV().getHRV(RRI_DF, np.mean(hr))
-        timeHR = HRV_DF['Timestamp'].tolist()
-        normalize_data_hrv = self.ProcessingData().normalize(HRV_DF['HRV'])
-        plotHR.setData(x=timeHR, y=normalize_data_hrv.tolist())
        
-        self.lrHR = pg.LinearRegionItem([timeHR[0], timeHR[len(timeHR) - 1]],
-                                        bounds=[timeHR[0], timeHR[len(timeHR) - 1]])  
+        timeHRV = HRV_DF['Timestamp'].tolist()
+        normalize_data_hrv = self.ProcessingData().normalize(HRV_DF['HRV'])
+        plotHR.setData(x=timeHRV, y=normalize_data_hrv.tolist())
+       
+        self.lrHR = pg.LinearRegionItem([timeHRV[0], timeHRV[len(timeHRV) - 1]],
+                                        bounds=[timeHRV[0], timeHRV[len(timeHRV) - 1]])  
         self.lrHR.setZValue(-10)  
         pwHR.addItem(self.lrHR)
-        self.lrHR.setRegion([timeHR[0], timeHR[0]])
+        self.lrHR.setRegion([timeHRV[0], timeHRV[0]])
         
         self.isCreatedPlotHR = True;
-    
-    def PlotHRFromBVP(self, path):
-        print("PlotHRFromBVP")
-        if(not path):  # If not exist file then dont loading
-            return;
-       
         
-        count, data, startTime, samplingRate = self._SD.LoadDataBVP(path)       
-        filteredBVP, ts_hr, hr = self.ProcessingData().ProcessedBVPDataE4(data) 
+    def processingHR_HRF(self, segment_filteredBVP, timestampInitial, timestampFinal):
+        try:
+            
+            timeHR = self.UnixTime().timeFrom(timestampInitial, self.TS_HR)
+            n_array = list(zip(timeHR, self.HR))        
+            HR_DF = pd.DataFrame(n_array, columns=['timeHR', 'hr'])        
+            HR_DF['timeHR'] = [datetime.fromtimestamp(ts) for ts in HR_DF['timeHR']]  
+            HR_DF = HR_DF[(HR_DF['timeHR'] >= self.UnixTime().run(timestampInitial)) & 
+                 (HR_DF['timeHR'] <= self.UnixTime().run(timestampFinal))]
+            
+            segment_hr = HR_DF['hr'].tolist()
+            RRI_DF = self.EmpaticaHRV().getRRI(segment_filteredBVP, timestampInitial, 64)
+            HRV_DF = self.EmpaticaHRV().getHRV(RRI_DF, np.mean(segment_hr))
+            timeHRV = HRV_DF['Timestamp'].tolist()
+            normalize_data_hrv = self.ProcessingData().normalize(HRV_DF['HRV'])
+            
+            return HR_DF, HRV_DF;
+        except:
+             print("Oops!", sys.exc_info()[0], "occured.")
+             print("Erro in processingHR_HRF()")
+             return (pd.DataFrame(n_array, columns=['timeHR', 'hr']),
+                     pd.DataFrame(n_array, columns=['Timestamp', 'HRV']));
+    
+    def PlotHRFromBVP(self, PATH_BVP):
+        print("PlotHRFromBVP")
+        self.PATH_BVP = PATH_BVP
+        if(not PATH_BVP):  # If not exist file then dont loading
+            return;
+        
+        # global FILTERED_BVP;
+        # global TS_BVP;
+        count, data, startTime, samplingRate = self._SD.LoadDataBVP(PATH_BVP)       
+        self.FILTERED_BVP, self.TS_HR, self.HR = self.ProcessingData().ProcessedBVPDataE4(data) 
         ut = self.UnixTime();        
-        endTime, tsBVP = ut.time_array(self._TIME_TAG_INITIAL, count, samplingRate)
+        endTime, self.TS_BVP = ut.time_array(self._TIME_TAG_INITIAL, count, samplingRate)
+        df = self.processingBVP(self._TIME_TAG_INITIAL, self._TIME_TAG_END)
+        segment_filteredBVP = df['filteredBVP'].tolist()       
+       
+        self.createHR(segment_filteredBVP)
+        
+    def processingBVP(self, timestampInitial, timestampFinal):
+       
                 
-        n_array = list(zip(tsBVP, filteredBVP))        
-        df = pd.DataFrame(n_array, columns=['tsBVP', 'filteredBVP'])        
+        n_array = list(zip(self.TS_BVP, self.FILTERED_BVP)) 
+       
+        df = pd.DataFrame(n_array, columns=['tsBVP', 'filteredBVP'])
         df['tsBVP'] = [datetime.fromtimestamp(ts) for ts in df['tsBVP']]
         # Cut in time
-        df = df[(df['tsBVP'] >= self.UnixTime().run(self._TIME_TAG_INITIAL)) & 
-                (df['tsBVP'] <= self.UnixTime().run(self._TIME_TAG_END))]       
-        filteredBVP = df['filteredBVP'].tolist()       
-       
-        self.createHR(ts_hr, hr, filteredBVP)
-   
+
+        df = df[(df['tsBVP'] >= self.UnixTime().run(timestampInitial)) & 
+                (df['tsBVP'] <= self.UnixTime().run(timestampFinal))]
+        return df;   
+        
     def PlotEmotion(self, url):
         print("PlotEmotion")
-
-        if(not url):  # If not exist file then dont loading
+        self.PATH_EMOTION_FACE = url
+        if(not self.PATH_EMOTION_FACE):  # If not exist file then dont loading
             return;
             
         try:
             
             
-            df = self._SD.LoadDataFacialExpression(indexSession=None, path=url);
+            df = self._SD.LoadDataFacialExpression(indexSession=None,
+                                                   path=self.PATH_EMOTION_FACE);
             
             d1 = list(zip(df['Time'], df['Happiness'], df['Sadness'], df['Anger'],
                                      df['Surprise'], df['Fear'], df['Disgust']))        
@@ -1322,7 +1566,7 @@ class FlowChartGame(QtGui.QMainWindow):
             e1.setValidator(QtGui.QIntValidator())
             e1.setMaxLength(4)
             e1.setAlignment(Qt.AlignLeft)
-            e1.setFont(QtGui.QFont("Arial",12))
+            e1.setFont(QtGui.QFont("Arial", 12))
             e1.textChanged.connect(self.textchangedNumber)
             
             e2 = QtGui.QLineEdit()
@@ -1333,12 +1577,12 @@ class FlowChartGame(QtGui.QMainWindow):
             e3.setValidator(QtGui.QIntValidator())
             e3.setMaxLength(1)
             e3.setAlignment(Qt.AlignLeft)
-            e3.setFont(QtGui.QFont("Arial",12))
+            e3.setFont(QtGui.QFont("Arial", 12))
             
             flo = QtGui.QFormLayout()
             flo.addRow("Number of Participant", e1)
-            flo.addRow("Number of Session",e3)
-            flo.addRow("Evaluator's name",e2)
+            flo.addRow("Number of Session", e3)
+            flo.addRow("Evaluator's name", e2)
           
             splitter = QtGui.QSplitter(Qt.Horizontal)  
             splitter.setSizes([300, 300, 300])
@@ -1377,28 +1621,28 @@ class FlowChartGame(QtGui.QMainWindow):
             FlowChartGame.reset(self.obj)
             return QWidget.closeEvent(self, *args, **kwargs)
         
-        def textchangedNumber(self,text):
+        def textchangedNumber(self, text):
             self.obj._NUMBER_PARTICIPANT = text
-        def textchangedNumberSession(self,text):
+        def textchangedNumberSession(self, text):
             self.obj._NUMBER_SESSION = text   
-        def textchangedName(self,text):
+        def textchangedName(self, text):
             self.obj._EVALUATOR_NAME = text;
             
     class EDAPeakDetectionScript:
         global SAMPLE_RATE
         SAMPLE_RATE = 8
         
-        def __init__(self,obj): 
+        def __init__(self, obj): 
             self.obj = obj
             pass;
         
-        def datetime_to_float(self,d):
+        def datetime_to_float(self, d):
             epoch = datetime.datetime.utcfromtimestamp(0)
-            total_seconds =  (d - epoch).total_seconds()
+            total_seconds = (d - epoch).total_seconds()
             # total_seconds will be in decimals (millisecond precision)
             return total_seconds
         
-        def processEDA(self,signal,startTime,endTime):
+        def processEDA(self, signal, startTime, endTime):
             thresh = 0.02;
             offset = 1;
             start_WT = 4;
@@ -1406,7 +1650,7 @@ class FlowChartGame(QtGui.QMainWindow):
             
 
             data = self.loadData_E4(signal)
-            df = self.calcPeakFeatures(data,offset,thresh,start_WT,end_WT)
+            df = self.calcPeakFeatures(data, offset, thresh, start_WT, end_WT)
             peakData = df[(df.index >= startTime) & (df.index <= endTime)]
             ts = []
             peak = []
@@ -1414,7 +1658,7 @@ class FlowChartGame(QtGui.QMainWindow):
             filtered_eda = []
             amp = []
             for item in peakData.index:
-                #print(type(item))
+                # print(type(item))
                 ts.append(item.to_pydatetime().timestamp())
             index = 0;
             
@@ -1426,8 +1670,9 @@ class FlowChartGame(QtGui.QMainWindow):
                 raw_eda.append(peakData['EDA'][index])
                 index = index + 1;
                 
-            return ts,raw_eda,filtered_eda,peak,amp;
-        def findPeaks(self,data, offset, start_WT, end_WT, thres=0, sampleRate=SAMPLE_RATE):
+            return ts, raw_eda, filtered_eda, peak, amp;
+        
+        def findPeaks(self, data, offset, start_WT, end_WT, thres=0, sampleRate=SAMPLE_RATE):
             '''
                 This function finds the peaks of an EDA signal and returns basic properties.
                 Also, peak_end is assumed to be no later than the start of the next peak. (Is this okay??)
@@ -1458,7 +1703,7 @@ class FlowChartGame(QtGui.QMainWindow):
                     peaks[i] = 1
                     for j in range(1, int(offset)):
                         if peak_sign[i - j] < 1 or peak_sign[i + j] > -1:
-                            #if peak_sign[i-j]==-1 or peak_sign[i+j]==1:
+                            # if peak_sign[i-j]==-1 or peak_sign[i+j]==1:
                             peaks[i] = 0
                             break
         
@@ -1554,11 +1799,11 @@ class FlowChartGame(QtGui.QMainWindow):
         
             return peaks, peak_start, peak_start_times, peak_end, peak_end_times, amplitude, max_deriv, rise_time, decay_time, SCR_width, half_rise
     
-        def get_seconds_and_microseconds(self,pandas_time):
+        def get_seconds_and_microseconds(self, pandas_time):
             return pandas_time.seconds + pandas_time.microseconds * 1e-6
     
-        def calcPeakFeatures(self,data,offset,thresh,start_WT,end_WT):
-            returnedPeakData = self.findPeaks(data, offset*SAMPLE_RATE, start_WT, end_WT, thresh, SAMPLE_RATE)
+        def calcPeakFeatures(self, data, offset, thresh, start_WT, end_WT):
+            returnedPeakData = self.findPeaks(data, offset * SAMPLE_RATE, start_WT, end_WT, thresh, SAMPLE_RATE)
             data['peaks'] = returnedPeakData[0]
             data['peak_start'] = returnedPeakData[1]
             data['peak_end'] = returnedPeakData[3]
@@ -1573,11 +1818,11 @@ class FlowChartGame(QtGui.QMainWindow):
             data['decay_time'] = returnedPeakData[8]
             data['SCR_width'] = returnedPeakData[9]
         
-            featureData = data[data.peaks==1][['EDA','rise_time','max_deriv','amp','decay_time','SCR_width']]
+            featureData = data[data.peaks == 1][['EDA', 'rise_time', 'max_deriv', 'amp', 'decay_time', 'SCR_width']]
         
             # Replace 0s with NaN, this is where the 50% of the peak was not found, too close to the next peak
-            featureData[['SCR_width','decay_time']]=featureData[['SCR_width','decay_time']].replace(0, np.nan)
-            featureData['AUC']=featureData['amp']*featureData['SCR_width']
+            featureData[['SCR_width', 'decay_time']] = featureData[['SCR_width', 'decay_time']].replace(0, np.nan)
+            featureData['AUC'] = featureData['amp'] * featureData['SCR_width']
         
             
         
@@ -1586,26 +1831,26 @@ class FlowChartGame(QtGui.QMainWindow):
     
     # draws a graph of the data with the peaks marked on it
     # assumes that 'data' dataframe already contains the 'peaks' column
-        def plotPeaks(self,data, x_seconds, sampleRate = SAMPLE_RATE):
+        def plotPeaks(self, data, x_seconds, sampleRate=SAMPLE_RATE):
             if x_seconds:
-                time_m = np.arange(0,len(data))/float(sampleRate)
+                time_m = np.arange(0, len(data)) / float(sampleRate)
             else:
-                time_m = np.arange(0,len(data))/(sampleRate*60.)
+                time_m = np.arange(0, len(data)) / (sampleRate * 60.)
         
             data_min = min(data['EDA'])
             data_max = max(data['EDA'])
         
-            #Plot the data with the Peaks marked
-            plt.figure(1,figsize=(20, 5))
+            # Plot the data with the Peaks marked
+            plt.figure(1, figsize=(20, 5))
             peak_height = data_max * 1.15
             data['peaks_plot'] = data['peaks'] * peak_height
             
-            plt.plot(time_m,data['peaks_plot'],'#4DBD33')
-            #plt.plot(time_m,data['EDA'])
-            plt.plot(time_m,data['filtered_eda'])
-            plt.xlim([0,time_m[-1]])
+            plt.plot(time_m, data['peaks_plot'], '#4DBD33')
+            # plt.plot(time_m,data['EDA'])
+            plt.plot(time_m, data['filtered_eda'])
+            plt.xlim([0, time_m[-1]])
             y_min = min(0, data_min) - (data_max - data_min) * 0.1
-            plt.ylim([min(y_min, data_min),peak_height])
+            plt.ylim([min(y_min, data_min), peak_height])
             plt.title('EDA with Peaks marked')
             plt.ylabel('$\mu$S')
             if x_seconds:
@@ -1615,22 +1860,22 @@ class FlowChartGame(QtGui.QMainWindow):
         
             plt.show()
     
-        def chooseValueOrDefault(self,str_input, default):
+        def chooseValueOrDefault(self, str_input, default):
                
             if str_input == "":
                 return default
             else:
                 return float(str_input)
     
-        def loadSingleFile_E4(self,filepath,list_of_columns, expected_sample_rate,freq):
+        def loadSingleFile_E4(self, filepath, list_of_columns, expected_sample_rate, freq):
             # Load data
             data = pd.read_csv(filepath)
             
             # Get the startTime and sample rate
             startTime = self.obj.UnixTime().run(data.columns.values[0])
             sampleRate = float(data.iloc[0][0])
-            data = data[data.index!=0]
-            data.index = data.index-1
+            data = data[data.index != 0]
+            data.index = data.index - 1
             
             # Reset the data frame assuming expected_sample_rate
             data.columns = list_of_columns
@@ -1638,33 +1883,33 @@ class FlowChartGame(QtGui.QMainWindow):
                 print('ERROR, NOT SAMPLED AT {0}HZ. PROBLEMS WILL OCCUR\n'.format(expected_sample_rate))
         
             # Make sure data has a sample rate of 8Hz
-            data = self.interpolateDataTo8Hz(data,sampleRate,startTime)
+            data = self.interpolateDataTo8Hz(data, sampleRate, startTime)
             return data
         
-        def loadData_E4(self,filepath):
+        def loadData_E4(self, filepath):
             # Load EDA data
-            eda_data = self.loadSingleFile_E4(filepath,["EDA"],4,"250L")
+            eda_data = self.loadSingleFile_E4(filepath, ["EDA"], 4, "250L")
             # Get the filtered data using a low-pass butterworth filter (cutoff:1hz, fs:8hz, order:6)
-            eda_data['filtered_eda'] =  self.butter_lowpass_filter(eda_data['EDA'], 1.0, 8, 6)
+            eda_data['filtered_eda'] = self.butter_lowpass_filter(eda_data['EDA'], 1.0, 8, 6)
         
            
             return eda_data
         
         
-        def interpolateDataTo8Hz(self,data,sample_rate,startTime):
+        def interpolateDataTo8Hz(self, data, sample_rate, startTime):
             print("sample_rate %s " % (sample_rate))
-            if sample_rate<8:
+            if sample_rate < 8:
                 # Upsample by linear interpolation
-                if sample_rate==2:
+                if sample_rate == 2:
                     data.index = pd.date_range(start=startTime, periods=len(data), freq='500L')
-                elif sample_rate==4:
+                elif sample_rate == 4:
                     data.index = pd.date_range(start=startTime, periods=len(data), freq='250L')
                 data = data.resample("125L").mean()
             else:
-                if sample_rate>8:
+                if sample_rate > 8:
                     # Downsample
-                    idx_range = list(range(0,len(data))) # TODO: double check this one
-                    data = data.iloc[idx_range[0::int(int(sample_rate)/8)]]
+                    idx_range = list(range(0, len(data)))  # TODO: double check this one
+                    data = data.iloc[idx_range[0::int(int(sample_rate) / 8)]]
                 # Set the index to be 8Hz
                 data.index = pd.date_range(start=startTime, periods=len(data), freq='125L')
         
@@ -1672,21 +1917,21 @@ class FlowChartGame(QtGui.QMainWindow):
             data = self.interpolateEmptyValues(data)
             return data
         
-        def interpolateEmptyValues(self,data):
+        def interpolateEmptyValues(self, data):
             cols = data.columns.values
             for c in cols:
                 data.loc[:, c] = data[c].interpolate()
         
             return data
         
-        def butter_lowpass(self,cutoff, fs, order=5):
+        def butter_lowpass(self, cutoff, fs, order=5):
             # Filtering Helper functions
             nyq = 0.5 * fs
             normal_cutoff = cutoff / nyq
             b, a = scisig.butter(order, normal_cutoff, btype='low', analog=False)
             return b, a
         
-        def butter_lowpass_filter(self,data, cutoff, fs, order=5):
+        def butter_lowpass_filter(self, data, cutoff, fs, order=5):
             # Filtering Helper functions
             b, a = self.butter_lowpass(cutoff, fs, order=order)
             y = scisig.lfilter(b, a, data)
@@ -1717,13 +1962,13 @@ class FlowChartGame(QtGui.QMainWindow):
             rounding in a decimal base
             """
     
-            maxMajSteps = int(size/self._pxLabelWidth)
+            maxMajSteps = int(size / self._pxLabelWidth)
            
             dt1 = datetime.fromtimestamp(minVal)
             dt2 = datetime.fromtimestamp(maxVal)
-            #print("dt(%s,%s)" %(dt1,dt2))
+            # print("dt(%s,%s)" %(dt1,dt2))
             dx = maxVal - minVal
-            #print("dx (%s): "%dx)
+            # print("dx (%s): "%dx)
             majticks = []
     
             if dx > 63072001:  # 3600s*24*(365+366) = 2 years (count leap year)
@@ -1850,7 +2095,7 @@ class FlowChartGame(QtGui.QMainWindow):
             raise NotImplementedError()  # TODO
 
     class TableView(QTableWidget):
-        def __init__(self, data,title, *args):
+        def __init__(self, data, title, *args):
             QTableWidget.__init__(self, *args)
             self.data = data
             self.setWindowTitle(title)
@@ -1859,7 +2104,7 @@ class FlowChartGame(QtGui.QMainWindow):
             self.resizeRowsToContents()
             self.setSelectionMode(QAbstractItemView.SingleSelection)
             self.setSelectionBehavior(QAbstractItemView.SelectRows)
-            #self#.show()
+            # self#.show()
         def setModeMultiple(self):
             self.setSelectionMode(QAbstractItemView.MultiSelection)
             self.setSelectionBehavior(QAbstractItemView.SelectRows)
@@ -1868,27 +2113,27 @@ class FlowChartGame(QtGui.QMainWindow):
             item1 = QTableWidgetItem()
             item1.setFlags(Qt.ItemIsSelectable | Qt.ItemIsEditable | 
                   Qt.ItemIsEnabled)
-            for n, key in enumerate(sorted(self.data.keys(),reverse=True)):
-            #for n, key in enumerate((self.data.keys())):
+            for n, key in enumerate(sorted(self.data.keys(), reverse=True)):
+            # for n, key in enumerate((self.data.keys())):
                 horHeaders.append(key)
                 for m, item in enumerate(self.data[key]):
                     newitem = QTableWidgetItem(item)
-                    newitem.setFlags(Qt.ItemIsSelectable  | Qt.ItemIsEnabled)
+                    newitem.setFlags(Qt.ItemIsSelectable | Qt.ItemIsEnabled)
                     self.setItem(m, n, newitem)
             self.setHorizontalHeaderLabels(horHeaders)
 
     class EmpaticaHRV:
         def __init__(self):
             pass
-        def bvpPeaks(self,signal):
+        def bvpPeaks(self, signal):
             cb = np.array(signal)
-            x = peakutils.indexes(cb, thres=0.02/max(cb), min_dist=0.1)
+            x = peakutils.indexes(cb, thres=0.02 / max(cb), min_dist=0.1)
             y = []
             i = 0
-            while (i < (len(x)-1)):
-                if x[i+1] - x[i] < 15:
+            while (i < (len(x) - 1)):
+                if x[i + 1] - x[i] < 15:
                     y.append(x[i])
-                    x = np.delete(x, i+1)
+                    x = np.delete(x, i + 1)
                 else:
                     y.append(x[i])
                 i += 1
@@ -1896,46 +2141,46 @@ class FlowChartGame(QtGui.QMainWindow):
         
         def getRRI(self, signal, start, sample_rate):
             peakIDX = self.bvpPeaks(signal)
-            spr = 1 / sample_rate # seconds between readings
+            spr = 1 / sample_rate  # seconds between readings
             start_time = float(start)
             timestamp = [start_time, (peakIDX[0] * spr) + start_time ] 
             ibi = [0, 0]
             for i in range(1, len(peakIDX)):
                 timestamp.append(peakIDX[i] * spr + start_time)
-                ibi.append((peakIDX[i] - peakIDX[i-1]) * spr)
+                ibi.append((peakIDX[i] - peakIDX[i - 1]) * spr)
         
             df = pd.DataFrame({'Timestamp': timestamp, 'IBI': ibi})
             return df
         
-        def getHRV(self,data, avg_heart_rate):
+        def getHRV(self, data, avg_heart_rate):
             rri = np.array(data['IBI']) * 1000
             RR_list = rri.tolist()
-            #RR_diff = []
+            # RR_diff = []
             RR_sqdiff = []
             RR_diff_timestamp = []
             cnt = 2
-            while (cnt < (len(RR_list)-1)): 
-                #RR_diff.append(abs(RR_list[cnt+1] - RR_list[cnt])) 
-                RR_sqdiff.append(math.pow(RR_list[cnt+1] - RR_list[cnt], 2)) 
+            while (cnt < (len(RR_list) - 1)): 
+                # RR_diff.append(abs(RR_list[cnt+1] - RR_list[cnt])) 
+                RR_sqdiff.append(math.pow(RR_list[cnt + 1] - RR_list[cnt], 2)) 
                 RR_diff_timestamp.append(data['Timestamp'][cnt])
                 cnt += 1
             hrv_window_length = 10
-            window_length_samples = int(hrv_window_length*(avg_heart_rate/60))
-            #SDNN = []
+            window_length_samples = int(hrv_window_length * (avg_heart_rate / 60))
+            # SDNN = []
             RMSSD = []
             index = 1
             for val in RR_sqdiff:
                 if index < int(window_length_samples):
-                    #SDNNchunk = RR_diff[:index:]
+                    # SDNNchunk = RR_diff[:index:]
                     RMSSDchunk = RR_sqdiff[:index:]
                 else:
-                    #SDNNchunk = RR_diff[(index-window_length_samples):index:]
-                    RMSSDchunk = RR_sqdiff[(index-window_length_samples):index:]
-                #SDNN.append(np.std(SDNNchunk))
+                    # SDNNchunk = RR_diff[(index-window_length_samples):index:]
+                    RMSSDchunk = RR_sqdiff[(index - window_length_samples):index:]
+                # SDNN.append(np.std(SDNNchunk))
                 RMSSD.append(math.sqrt(np.std(RMSSDchunk)))
                 index += 1
             dt = np.dtype('Float64')
-            #SDNN = np.array(SDNN, dtype=dt)
+            # SDNN = np.array(SDNN, dtype=dt)
             RMSSD = np.array(RMSSD, dtype=dt)
             df = pd.DataFrame({'Timestamp': RR_diff_timestamp, 'HRV': RMSSD})
             return df
@@ -1945,7 +2190,7 @@ class FlowChartGame(QtGui.QMainWindow):
         def __init__(self):
             pass;
         
-        def normalize(self,myarray):
+        def normalize(self, myarray):
             
             arrayNormalized = myarray;
             max_value = max(myarray);
@@ -1953,12 +2198,12 @@ class FlowChartGame(QtGui.QMainWindow):
             arrayNormalized = (arrayNormalized - min_value) / (max_value - min_value); 
             return arrayNormalized;
         
-        def getMetricsEDA(self,signal):
+        def getMetrics(self, signal):
             metric = biosppy.tools.signal_stats(signal)
             return metric;
         
-        def ProcessedBVPDataE4(self,sig):
-            ts, filtered, onsets, ts_hr, hr = biosppy.bvp.bvp(signal=sig, sampling_rate=64., show=True);       
+        def ProcessedBVPDataE4(self, sig):
+            ts, filtered, onsets, ts_hr, hr = biosppy.bvp.bvp(signal=sig, sampling_rate=64., show=False);       
             return  filtered, ts_hr, hr;
 
     class UnixTime(object):
@@ -1971,103 +2216,103 @@ class FlowChartGame(QtGui.QMainWindow):
             '''
             Constructor
             '''
-        def run(self,strTime):
-            #ts = int("1284101485")
+        def run(self, strTime):
+            # ts = int("1284101485")
             ts = float(strTime)
     
             # if you encounter a "year is out of range" error the timestamp
             # may be in milliseconds, try `ts /= 1000` in that case
-            #dt = datetime.fromtimestamp(ts).strftime('%H:%M:%S');
-            #print(dt)
-            #print(datetime.fromtimestamp(ts) + timedelta(seconds=1/4))
-            #return datetime.utcfromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S');
+            # dt = datetime.fromtimestamp(ts).strftime('%H:%M:%S');
+            # print(dt)
+            # print(datetime.fromtimestamp(ts) + timedelta(seconds=1/4))
+            # return datetime.utcfromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S');
             return datetime.fromtimestamp(ts);
         
-        def runGMT(self,strTime):
-            #ts = int("1284101485")
+        def runGMT(self, strTime):
+            # ts = int("1284101485")
             ts = float(strTime)
     
             # if you encounter a "year is out of range" error the timestamp
             # may be in milliseconds, try `ts /= 1000` in that case
-            #dt = datetime.fromtimestamp(ts).strftime('%H:%M:%S');
-            #print(dt)
-            #print(datetime.fromtimestamp(ts) + timedelta(seconds=1/4))
+            # dt = datetime.fromtimestamp(ts).strftime('%H:%M:%S');
+            # print(dt)
+            # print(datetime.fromtimestamp(ts) + timedelta(seconds=1/4))
             return datetime.utcfromtimestamp(ts)
-            #return datetime.fromtimestamp(ts);
+            # return datetime.fromtimestamp(ts);
         
-        def time_array(self,strTime,count,samplingRate):
+        def time_array(self, strTime, count, samplingRate):
             aux = 0;
             array = []
             dt = self.run(strTime)
-            print("Count: %s " % (len(count)/samplingRate))
-                #diff = accumulate - startTime;
+            print("Count: %s " % (len(count) / samplingRate))
+                # diff = accumulate - startTime;
             for ts in count:
-                #print(dt+aux*timedelta(seconds=1/4))
-                accumulate = dt+aux*timedelta(seconds=1/samplingRate);
-                #st= datetime.fromtimestamp(accumulate.timestamp()).strftime('%H:%M:%S');
+                # print(dt+aux*timedelta(seconds=1/4))
+                accumulate = dt + aux * timedelta(seconds=1 / samplingRate);
+                # st= datetime.fromtimestamp(accumulate.timestamp()).strftime('%H:%M:%S');
                 
                 array.append(accumulate.timestamp())
-                #array.append(str(diff))
+                # array.append(str(diff))
                 aux = aux + 1;
-            #print(datetime.fromtimestamp(array[len(array)-1]))
-            return array[len(array)-1],array;
+            # print(datetime.fromtimestamp(array[len(array)-1]))
+            return array[len(array) - 1], array;
         
-        def time_inc(self,strTime,value):
+        def time_inc(self, strTime, value):
             dt = self.run(strTime)
-            accumulate = dt+timedelta(seconds=int(value/1000));
+            accumulate = dt + timedelta(seconds=int(value / 1000));
             return accumulate;
         
-        def time_reduce(self,strTime,value):
+        def time_reduce(self, strTime, value):
             dt = self.run(strTime)
-            accumulate = dt-timedelta(seconds=int(value/1000));
+            accumulate = dt - timedelta(seconds=int(value / 1000));
             return accumulate;
         
-        def timeFrom(self,strTime,arraySecond):
+        def timeFrom(self, strTime, arraySecond):
             array = []
             dt = self.run(strTime)
             for ts in (arraySecond):
-                #print(dt+aux*timedelta(seconds=1/4))
-                accumulate = dt+timedelta(seconds=ts);
-                #diff = accumulate - startTime;
+                # print(dt+aux*timedelta(seconds=1/4))
+                accumulate = dt + timedelta(seconds=ts);
+                # diff = accumulate - startTime;
                 array.append(accumulate.timestamp())
-                #array.append(str(diff))
+                # array.append(str(diff))
                 
             return array;
         
-        def time_array_segment(self,strTime,count,samplingRate):
+        def time_array_segment(self, strTime, count, samplingRate):
             array = []
             dt = self.run(strTime)
-                #diff = accumulate - startTime;
+                # diff = accumulate - startTime;
             
             aux = 0;
-            count_segment = int(len(count)/samplingRate)
+            count_segment = int(len(count) / samplingRate)
             for ts in range(count_segment):
-                accumulate = dt+aux*timedelta(seconds=1);
+                accumulate = dt + aux * timedelta(seconds=1);
                 t = datetime.fromtimestamp(accumulate.timestamp()).strftime('%H:%M:%S');
-                #diff = accumulate - startTime;
-                #print(accumulate)
+                # diff = accumulate - startTime;
+                # print(accumulate)
                 array.append(accumulate.timestamp())
-                #array.append(str(diff))
+                # array.append(str(diff))
                 aux = aux + 1;
-            print("Last Time: %s" %(datetime.fromtimestamp(array[len(array)-1])))
-            return array[len(array)-1],array;  
+            print("Last Time: %s" % (datetime.fromtimestamp(array[len(array) - 1])))
+            return array[len(array) - 1], array;  
         
-        def time_1(self,strTime,samplingRate):
+        def time_1(self, strTime, samplingRate):
             aux = 0;
             array = []
             dt = self.run(strTime)
-                #diff = accumulate - startTime;
+                # diff = accumulate - startTime;
             for ts in (range(1294)):
-                #print(dt+aux*timedelta(seconds=1/4))
-                accumulate = dt+aux*timedelta(seconds=1);
+                # print(dt+aux*timedelta(seconds=1/4))
+                accumulate = dt + aux * timedelta(seconds=1);
                
                 array.append(accumulate.timestamp())
-                #array.append(str(diff))
+                # array.append(str(diff))
                 aux = aux + 1;
             diff = accumulate - self.run(strTime);
             return array;    
       
-        def diffTimeStamp(self,strTimeVideo, strT2):
+        def diffTimeStamp(self, strTimeVideo, strT2):
             """
             Method that calculates difference between video time and arbitrary time
     
@@ -2088,7 +2333,7 @@ class FlowChartGame(QtGui.QMainWindow):
             td_seconds = int(round(td.total_seconds()))
             return td_seconds;
         
-        def diffTimeStampTags(self,strT1, strT2):
+        def diffTimeStampTags(self, strT1, strT2):
             """
             Method that calculates difference between video time and arbitrary time
     
@@ -2107,7 +2352,7 @@ class FlowChartGame(QtGui.QMainWindow):
             else:
                 td = tstamp2 - tstamp1
             td_seconds = int(round(td.total_seconds()))
-            return td_seconds*1000;
+            return td_seconds * 1000;
 
     class SourceData:
            
@@ -2116,29 +2361,29 @@ class FlowChartGame(QtGui.QMainWindow):
            
         
      
-        def LoadDataFacialExpression(self, path,indexSession=None):
+        def LoadDataFacialExpression(self, path, indexSession=None):
             
             if(indexSession != None):
                 source = 'EMOCAO_*.csv';            
-                url = path.format(indexSession,indexSession,source)
+                url = path.format(indexSession, indexSession, source)
                 file_ = glob.glob(url)[0]
             else: file_ = path;    
-            list_=[];
+            list_ = [];
             
-            df = pd.read_csv(file_,index_col=None, header=0)
+            df = pd.read_csv(file_, index_col=None, header=0)
             list_.append(df)
                 
             frame = pd.concat(list_)
            
                 
-            df = pd.DataFrame(columns=['Time','Neutral', 'Happiness','Sadness',
-                                       'Anger','Fear','Surprise','Disgust']);    
+            df = pd.DataFrame(columns=['Time', 'Neutral', 'Happiness', 'Sadness',
+                                       'Anger', 'Fear', 'Surprise', 'Disgust']);    
             
             dates_list = [];
             for d in frame['Time']:
                 dates_list.append(datetime.strptime(d, '%d/%m/%Y %H:%M:%S.%f')) 
                 
-            #df['Time'] = ut.getTimeElapsed(dates_list); 
+            # df['Time'] = ut.getTimeElapsed(dates_list); 
             df['Time'] = (dates_list); 
             df['Neutral'] = ((np.array(frame['neutral']).astype(float))) ;
             df['Happiness'] = (np.array(frame['happiness']).astype(float)) ;
@@ -2150,42 +2395,42 @@ class FlowChartGame(QtGui.QMainWindow):
             
             return df;
         
-        def LoadDataEDA(self,path):
-            e3data = self.E3Data.newE3DataFromFilePath(self,path,"EDA") 
+        def LoadDataEDA(self, path):
+            e3data = self.E3Data.newE3DataFromFilePath(self, path, "EDA") 
             print("Load EDA Data")
             index = np.arange(len (e3data.data))
             dataset_array = []    
             for item in e3data.data:
                 dataset_array.append(float(item[0])) 
             
-            return (index,dataset_array,e3data.startTime,e3data.getEndTime(),e3data.samplingRate); 
+            return (index, dataset_array, e3data.startTime, e3data.getEndTime(), e3data.samplingRate); 
         
-        def LoadDataEDASlice(self,path,startTime,endTime):
-            e3data = self.E3Data.newE3DataFromFilePath(self,path,"EDA") 
+        def LoadDataEDASlice(self, path, startTime, endTime):
+            e3data = self.E3Data.newE3DataFromFilePath(self, path, "EDA") 
             print("Load Data EDA Slice")
-            slice = e3data.getSlide(startTime,endTime)
+            slice = e3data.getSlide(startTime, endTime)
             index = np.arange(len (slice.data))
             dataset_array = []    
             for item in slice.data:
                 dataset_array.append(float(item[0])) 
             
-            return (index,dataset_array,slice.samplingRate); 
+            return (index, dataset_array, slice.samplingRate); 
         
-        def LoadDataHR(self,path):
-            e3data = self.E3Data.newE3DataFromFilePath(self,path,"HR") 
+        def LoadDataHR(self, path):
+            e3data = self.E3Data.newE3DataFromFilePath(self, path, "HR") 
             print("Load HR Data")
             index = np.arange(len (e3data.data))
             dataset_array = []    
             for item in e3data.data:
                 dataset_array.append(float(item[0])) 
             
-            return (index,dataset_array,e3data.startTime,e3data.getEndTime(),e3data.samplingRate); 
+            return (index, dataset_array, e3data.startTime, e3data.getEndTime(), e3data.samplingRate); 
         
-        def LoadDataHRSlice(self,path,startTime,endTime):
-            e3data = self.E3Data.newE3DataFromFilePath(self,path,"HR") 
+        def LoadDataHRSlice(self, path, startTime, endTime):
+            e3data = self.E3Data.newE3DataFromFilePath(self, path, "HR") 
             index = np.arange(len (e3data.data))
             print(e3data.data)        
-            slice = e3data.getSlide(startTime,endTime)
+            slice = e3data.getSlide(startTime, endTime)
             print("Load Data HR Slice")
             print(slice.data)
             index = np.arange(len (slice.data))
@@ -2193,32 +2438,32 @@ class FlowChartGame(QtGui.QMainWindow):
             for item in slice.data:
                 dataset_array.append(float(item[0])) 
             
-            return (index,dataset_array,slice.samplingRate);   
+            return (index, dataset_array, slice.samplingRate);   
         
-        def LoadDataBVP(self,path):
+        def LoadDataBVP(self, path):
             print("Load BVP Data")
     
-            e3data = self.E3Data.newE3DataFromFilePath(self,path,"BVP") 
+            e3data = self.E3Data.newE3DataFromFilePath(self, path, "BVP") 
             index = np.arange(len (e3data.data))
             dataset_array = []    
             for item in e3data.data:
                 dataset_array.append(float(item[0])) 
     
-            return (index,dataset_array,e3data.startTime,e3data.samplingRate); 
+            return (index, dataset_array, e3data.startTime, e3data.samplingRate); 
         
-        def LoadDataBVPSlice(self,path,startTime,endTime):
-            e3data = self.E3Data.newE3DataFromFilePath(self,path,"BVP") 
+        def LoadDataBVPSlice(self, path, startTime, endTime):
+            e3data = self.E3Data.newE3DataFromFilePath(self, path, "BVP") 
             print("Load BVP Data Slice")
-            slice = e3data.getSlide(startTime,endTime)
+            slice = e3data.getSlide(startTime, endTime)
             index = np.arange(len (slice.data))
             dataset_array = []    
             for item in slice.data:
                 dataset_array.append(float(item[0])) 
             
-            return (index,dataset_array,slice.samplingRate);      
+            return (index, dataset_array, slice.samplingRate);      
         
-        def LoadDataTemp(self,path):
-            e3data = self.E3Data.newE3DataFromFilePath(self,path,"TEMP") 
+        def LoadDataTemp(self, path):
+            e3data = self.E3Data.newE3DataFromFilePath(self, path, "TEMP") 
             print("Load Temp Data")
             index = np.arange(len (e3data.data))
             dataset_array = []    
@@ -2226,11 +2471,11 @@ class FlowChartGame(QtGui.QMainWindow):
                 
                 dataset_array.append(float(item[0])) 
             
-            return (index,dataset_array,e3data.startTime,e3data.getEndTime(),e3data.samplingRate); 
+            return (index, dataset_array, e3data.startTime, e3data.getEndTime(), e3data.samplingRate); 
         
-        def LoadDataTags(self,path):
+        def LoadDataTags(self, path):
             try:
-                e3data = self.E3Data.newE3DataFromFilePath(self,path,"TAGS") 
+                e3data = self.E3Data.newE3DataFromFilePath(self, path, "TAGS") 
                 index = np.arange(len (e3data.data))
                 dataset_array = []    
                 for item in e3data.data:
@@ -2241,71 +2486,71 @@ class FlowChartGame(QtGui.QMainWindow):
                 print("Oops!", sys.exc_info()[0], "occured.")
                 print("Erro in LoadDataTags")
         class E3Data:
-            def __init__(self,dataType,startTime,samplingRate,data):
+            def __init__(self, dataType, startTime, samplingRate, data):
                 self.dataType = dataType
-                self.startTime = float ( startTime)
-                self.samplingRate =  float (samplingRate)
+                self.startTime = float (startTime)
+                self.samplingRate = float (samplingRate)
                 self.data = data
             
             
         
-            def toString(self,unixTime=True):
+            def toString(self, unixTime=True):
                 if(unixTime):
-                    return "Data Type: %s, Start Time:%s, End Time:%s  SamplingRate %s" %(self.dataType,self.startTime,self.getEndTime(),self.samplingRate)
+                    return "Data Type: %s, Start Time:%s, End Time:%s  SamplingRate %s" % (self.dataType, self.startTime, self.getEndTime(), self.samplingRate)
                 else:
-                    _string = "Data Type: %s, Start Time:%s, End Time:%s  SamplingRate %s" %(
-                            self.dataType,datetime.datetime.fromtimestamp(self.startTime)
-                            ,datetime.datetime.fromtimestamp( float(self.getEndTime())),self.samplingRate)
+                    _string = "Data Type: %s, Start Time:%s, End Time:%s  SamplingRate %s" % (
+                            self.dataType, datetime.datetime.fromtimestamp(self.startTime)
+                            , datetime.datetime.fromtimestamp(float(self.getEndTime())), self.samplingRate)
                     return _string
             def getData(self):
                 return self.data
             def getEndTime(self):
                 _startDateTime = datetime.datetime.fromtimestamp(self.startTime)
-                _endDateTime = _startDateTime +  datetime.timedelta (seconds=len(self.data) / self.samplingRate )
+                _endDateTime = _startDateTime + datetime.timedelta (seconds=len(self.data) / self.samplingRate)
                 return  _endDateTime.strftime("%s")
-            def getSlide(self, start,end):
-                _slideStartTime = datetime.datetime.fromtimestamp( self.startTime) 
+            def getSlide(self, start, end):
+                _slideStartTime = datetime.datetime.fromtimestamp(self.startTime) 
                 
                 _slideStartTime = _slideStartTime + datetime.timedelta(seconds=start)
                 return self.E3Data(self.dataType,
-                        _slideStartTime.strftime("%s"),self.samplingRate, 
+                        _slideStartTime.strftime("%s"), self.samplingRate,
                         self.data[start * int (self.samplingRate): end * int (self.samplingRate)])
         
             def getNormalTime(self):
                 return datetime.datetime.fromtimestamp(self.startTime)
         
-            def saveToFile(self,_path):
-                with open(_path,"w") as _FILE_OUTPUT:
-                    _FILE_OUTPUT.write(str( self.startTime ) + "\n")
-                    _FILE_OUTPUT.write(str( self.samplingRate) + "\n")
+            def saveToFile(self, _path):
+                with open(_path, "w") as _FILE_OUTPUT:
+                    _FILE_OUTPUT.write(str(self.startTime) + "\n")
+                    _FILE_OUTPUT.write(str(self.samplingRate) + "\n")
                     for _line in self.data:
-                        _FILE_OUTPUT.writelines(','.join(str(y) for y in _line)+"\n")
+                        _FILE_OUTPUT.writelines(','.join(str(y) for y in _line) + "\n")
         
             @staticmethod
-            def newE3DataFromFilePath(self,_FILE_INPUT_PATH,_DATA_TYPE):
+            def newE3DataFromFilePath(self, _FILE_INPUT_PATH, _DATA_TYPE):
                
-                with open(_FILE_INPUT_PATH,"r") as _FILE_INPUT:
+                with open(_FILE_INPUT_PATH, "r") as _FILE_INPUT:
                     _lineNumber = 0
                     _samplingRate = -1
                     _startTime = ""
                     _data = []
                     for _line in _FILE_INPUT:
                         if (_DATA_TYPE == "TAGS"):
-                            _dataLine = _line.replace("\n","").split(",")
+                            _dataLine = _line.replace("\n", "").split(",")
                             _data.append(_dataLine)
-                            _startTime=0
+                            _startTime = 0
                             continue;
                         if (_lineNumber == 0):
-                            _startTime = _line.replace("\n","").split(",")[0]
+                            _startTime = _line.replace("\n", "").split(",")[0]
                         if (_lineNumber == 1):
                             if not (_DATA_TYPE == "IBI"):
-                                _samplingRate = _line.replace("\n","").split(",")[0]
-                        if(_lineNumber >1):
-                            _dataLine = _line.replace("\n","").split(",")
+                                _samplingRate = _line.replace("\n", "").split(",")[0]
+                        if(_lineNumber > 1):
+                            _dataLine = _line.replace("\n", "").split(",")
                             _data.append(_dataLine)
                         _lineNumber += 1
                     
-                    return self.E3Data(_DATA_TYPE,_startTime,_samplingRate,_data)   
+                    return self.E3Data(_DATA_TYPE, _startTime, _samplingRate, _data)   
 
     
 
@@ -2314,7 +2559,7 @@ class FlowChartGame(QtGui.QMainWindow):
 
     
 def scale(val, src, dst):
-        return int(((val - src[0]) / float(src[1]-src[0])) * (dst[1]-dst[0]) + dst[0])
+        return int(((val - src[0]) / float(src[1] - src[0])) * (dst[1] - dst[0]) + dst[0])
 
 class Ui_Form(object):
         def setupUi(self, Form):
@@ -2475,7 +2720,7 @@ class QRangeSlider(QtWidgets.QWidget, Ui_Form):
     
         def getMoved(self):
             return self.isMoved;
-        def setMoved(self,value):
+        def setMoved(self, value):
             self.isMoved = value   
         def min(self):
             return getattr(self, '__min', None)
@@ -2535,11 +2780,11 @@ class QRangeSlider(QtWidgets.QWidget, Ui_Form):
         def keyPressEvent(self, event):
             key = event.key()
             if key == QtCore.Qt.Key_Left:
-                s = self.start()-1
-                e = self.end()-1
+                s = self.start() - 1
+                e = self.end() - 1
             elif key == QtCore.Qt.Key_Right:
-                s = self.start()+1
-                e = self.end()+1
+                s = self.start() + 1
+                e = self.end() + 1
             else:
                 event.ignore()
                 return
