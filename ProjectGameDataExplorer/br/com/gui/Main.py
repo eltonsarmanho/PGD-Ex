@@ -211,7 +211,7 @@ class FlowChartGame(QtGui.QMainWindow):
             
             self.tv.setModeMultiple()
             self.tv.resizeColumnsToContents()
-            self.tv.horizontalHeader().setSectionResizeMode(QtGui.QHeaderView.Stretch)                
+            self.tv.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)                
             self.win = QWidget()
             
             def getSelectedInterval():
@@ -261,7 +261,7 @@ class FlowChartGame(QtGui.QMainWindow):
           
             self.tv = self.TableView(data, "Time Intervals", len(arrayTagsInitial), 2)            
             self.tv.resizeColumnsToContents()
-            self.tv.horizontalHeader().setSectionResizeMode(QtGui.QHeaderView.Stretch)                
+            self.tv.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)                
 
 
             self.win = QWidget()
@@ -1046,206 +1046,7 @@ class FlowChartGame(QtGui.QMainWindow):
             newPosition = self.UnixTime().diffTimeStamp(timeVideo, self.getWindowInit())
             self.setPositionInPlayer(newPosition * 1000)
            
-    def processingMetrics(self):
-        
-        # Loading Dataset
-        self.dataset = pd.read_csv("/home/eltonss/Desktop/dataset.csv", sep=',') 
-        P = 4
-        array = [1,2,3,4]
-        _UT = self.UnixTime();
-        for session  in array:
-            filter = ((self.dataset['Player'] == P) & 
-                          (self.dataset['Session'] == session));
-            auxi = np.min(self.dataset[filter]['Interval Initial'])
-            auxf = np.max(self.dataset[filter]['Interval Final'])
-                
-            df_emotion = self.processingMetricFaceEmotion(auxi, auxf, P, session)
-            df_BVP = self.processingMetricBVP(auxi, auxf, P, session)          
-            df_EDA = self.processingMetricEDA(auxi, auxf, P, session)
-            df = df_emotion.join(df_EDA).join((df_BVP))
-            url = '/home/eltonss/Desktop/Resultados/MetricsP{}_S{}.csv'.format(P, session)
-            df.to_csv(url)
-
-    def processingMetricFaceEmotion(self, auxi, auxf, participant, session):
-           
-        #try:
-           # loading BVP
-            df = self._SD.LoadDataFacialExpression(indexSession=None,
-                                                   path=self.PATH_EMOTION_FACE);
-            
-            df['Time'] = [datetime.timestamp(dt) for dt in  df['Time']]
-            d1 = list(zip(df['Time'], df['Happiness'], df['Sadness'], df['Anger'],
-                                     df['Surprise'], df['Fear'], df['Disgust']))        
-            data = pd.DataFrame(d1, columns=['tsEmotion', 'Happiness', 'Sadness',
-                                                 "Anger", "Surprise", "Fear", 'Disgust'])   
-            
-            startTime = data['tsEmotion'][0]
-            sampleRate = 30
-            data = data['Happiness'].tolist()            
-            
-            data_emotion = EvenlySignal(values=data,
-                   sampling_freq=sampleRate,
-                   signal_type='emotion',
-                   start_time=startTime) 
-            print("Duration Emotion: %s: " %(data_emotion.get_duration()))
-            print("Start Time: %s" % (startTime))
-            
     
-            #array1 = dataframe['Happiness'].tolist()
-            #array2 = dataframe['Sadness'].tolist()
-            #array3 = dataframe['Anger'].tolist()
-            #array4 = dataframe['Surprise'].tolist()
-            #array5 = dataframe['Fear'].tolist()
-            #array6 = dataframe['Disgust'].tolist()
-            # Filtering
-            # Detect IBI
-          
-            
-            data_emotion = flt.Normalize('maxmin')(data_emotion)
-            # Select area of interest
-            data_emotion = data_emotion.segment_time(auxi, auxf)
-            print("Duration Emotion: %s: " %(data_emotion.get_duration()))
-            print("Start Time: %s" % (startTime))
-            ax1 = plt.subplot(211)
-            data_emotion.plot()   
-           
-            plt.savefig('/home/eltonss/Pictures/Resultados/Emotion/Emotion{}_S{}.png'.format(participant, session), dpi=600)
-            plt.close()
-            
-            #,,ph.Min,ph.StDev,ph.Range,ph.Median
-            fixed_length = ph.FixedSegments(step=10, width=10)  
-             
-            data_emotion_ind, col_names = ph.fmap(fixed_length,ph.preset_activity(prefix='emotion_'),data_emotion)
-            # col_names[2] = 'LabelBVP'
-            data_emotion_ind_df = pd.DataFrame(data_emotion_ind, columns=col_names)
-            data_emotion_ind_df=data_emotion_ind_df[['label','begin','end','emotion_maximum','emotion_minimum','emotion_mean','emotion_range','emotion_sd']]
-
-            data_emotion_ind_df = data_emotion_ind_df.drop('label', 1)
-            #url = '/home/eltonss/Desktop/Resultados/EmotionMetricsP{}_S{}.csv'.format(participant,session)
-            #data_emotion_ind_df.to_csv(url)
-            return data_emotion_ind_df;
-           
-        #except:
-        #     print("Oops!", sys.exc_info()[0], "occured.")
-        #     print("Erro in processingMetricEmotion")
-          
-    def processingMetricBVP(self, auxi, auxf, participant, session):
-        try:
-        # loading BVP
-            data = pd.read_csv(self.PATH_BVP)            
-           
-            startTime = float(data.columns.values[0])
-            sampleRate = float(data.iloc[0][0])
-            data = data[data.index != 0]
-            data.index = data.index - 1 
-            bvp_data = TestData.bvp()
-            data = [row[0] for row in data.get_values()]
-            bvp = EvenlySignal(values=data,
-                   sampling_freq=sampleRate,
-                   signal_type='bvp',
-                   start_time=startTime) 
-            # Filtering
-            # Detect IBI
-          
-            
-            bvp = bvp.resample(fout=bvp.get_sampling_freq() * 2, kind='cubic')
-            bvp = flt.Normalize('maxmin')(bvp)
-            # Select area of interest
-            #index = [i for i, date in enumerate(bvp.get_times()) 
-            #              if ((date >= auxi) & (date <= auxf)) ] 
-            bvp = bvp.segment_time(auxi, auxf)
-            ibi = est.BeatFromBP()(bvp)
-            
-            ax1 = plt.subplot(211)
-            ibi.plot()   
-            plt.subplot(212)
-            bvp.plot()
-            plt.savefig('/home/eltonss/Pictures/Resultados/BVP/BVP{}_S{}.png'.format(participant, session), dpi=600)
-            plt.close()
-            
-            # id_bad_ibi = ph.BeatOutliers(cache=3, sensitivity=0.25)(ibi)
-            # ibi = ph.FixIBI(id_bad_ibi)(ibi)
-            fixed_length = ph.FixedSegments(step=10, width=10)       
-            TD_HRV_ind, col_names = ph.fmap(fixed_length, ph.preset_hrv_td(), ibi)
-            # col_names[2] = 'LabelBVP'
-            TD_HRV_ind_df = pd.DataFrame(TD_HRV_ind, columns=col_names)
-            TD_HRV_ind_df = TD_HRV_ind_df.drop('begin', 1)
-            TD_HRV_ind_df = TD_HRV_ind_df.drop('end', 1)
-            TD_HRV_ind_df = TD_HRV_ind_df.drop('label', 1)
-            #url = '/home/eltonss/Desktop/Resultados/MetricsBVP.csv'
-            #TD_HRV_ind_df.to_csv(url)
-            return TD_HRV_ind_df;
-            # url = '/home/eltonss/Desktop/Resultados/BVP/BVPmetricsP{}_S{}.csv'.format(participant,session)
-            # TD_HRV_ind_df.to_csv(url)
-        except:
-             print("Oops!", sys.exc_info()[0], "occured.")
-             print("Erro in processingMetricBVP")
-        
-    def processingMetricEDA(self, auxi, auxf, participant, session):
-        print("processingMetricEDA")     
-        
-        try:
-                # loading EDA
-            data = pd.read_csv(PATH_EDA)            
-            
-
-            startTime = float(data.columns.values[0])
-            sampleRate = float(data.iloc[0][0])
-            data = data[data.index != 0]
-            data.index = data.index - 1
-            data = [row[0] for row in data.get_values()]
-            
-
-            eda = EvenlySignal(values=data,
-                   sampling_freq=sampleRate,
-                   signal_type='EDA',
-                   start_time=startTime)
-            print("Durantion(s) of EDA: %s" % (eda.get_duration()))
-            
-            # filtering and normalization : 
-            # remove high frequency noise
-            # resampling : decrease the sampling frequency by cubic interpolation
-            eda = eda.resample(fout=8, kind='cubic')
-            filter = ph.ConvolutionalFilter(irftype='gauss',
-                                            win_len=8 / eda.get_sampling_freq())
-            eda = filter(eda)
-            normalize = flt.Normalize('maxmin')
-            eda = normalize(eda)
-            
-            # Select area of interest
-            #index = [i for i, date in enumerate(eda.get_times()) 
-            #              if ((date >= auxi) & (date <= auxf)) ] 
-            
-            eda = eda.segment_time(auxi, auxf)
-            # create estimator
-            driver = ph.DriverEstim()(eda)        
-                  
-            
-            phasic, tonic, _ = ph.PhasicEstim(delta=0.02)(driver)
-            ax1 = plt.subplot(211)
-            eda.plot()   
-            plt.subplot(212)             
-            phasic.plot()
-            plt.savefig('/home/eltonss/Pictures/Resultados/EDA/edaP{}_S{}.png'.format(participant, session), dpi=600)
-            plt.close()
-            
-            # fixed length windowing
-            fixed_length = ph.FixedSegments(step=10, width=10)       
-            # we use the preset indicators for the phasic signal.
-            # We need to define the minimum amplitude of the peaks that will be considered
-            PHA_ind, col_names = ph.fmap(fixed_length, ph.preset_phasic(delta=0.02), phasic)
-            PHA_ind_df = pd.DataFrame(PHA_ind, columns=col_names)
-      
-            PHA_ind_df = PHA_ind_df.drop('begin', 1)
-            PHA_ind_df = PHA_ind_df.drop('end', 1)
-            #PHA_ind_df = PHA_ind_df.shift(1, axis=1)
-            PHA_ind_df = PHA_ind_df.drop('label', 1)
-            #url = '/home/eltonss/Desktop/Resultados/MetricsEDA.csv'
-            #PHA_ind_df.to_csv(url)
-            return PHA_ind_df
-        except:
-             print("Oops!", sys.exc_info()[0], "occured.")
-             print("Erro in processingMetricEDA")
         
     def PlotEda(self, path):    
         print("PlotEda")   

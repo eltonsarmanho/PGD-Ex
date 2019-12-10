@@ -1,9 +1,11 @@
-import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
-import scipy.signal as scisig
-from br.com.util.UnixTime import UnixTime
 from datetime import datetime
+
+from br.com.util.UnixTime import UnixTime
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import scipy.signal as scisig
+
 
 class EDAPeakDetectionScript:
     global SAMPLE_RATE

@@ -5,19 +5,15 @@ Created on 15 de abr de 2019
 @author: eltonss
 '''
 
-import matplotlib
-
-from PyQt5.QtCore import  Qt, QUrl,QTime
+from PyQt5.QtCore import  Qt, QUrl, QTime
 from PyQt5.QtMultimedia import QMediaContent, QMediaPlayer
 from PyQt5.QtMultimediaWidgets import QVideoWidget
-from PyQt5.QtWidgets import QMessageBox,QWidget,QSplitter,QStyle, QCheckBox,QListWidget
-
+from PyQt5.QtWidgets import QMessageBox, QWidget, QSplitter, QStyle, QCheckBox, QListWidget
 from datetime import datetime
+import math
+import matplotlib
 from pyqtgraph.Qt import QtCore, QtGui
 import sys, os
-import math
-
-matplotlib.use('Agg')
 
 from br.com.gui.DateAxis import DateAxis
 from br.com.gui.TableView import TableView
@@ -30,6 +26,10 @@ from br.com.util.UnixTime import UnixTime
 import numpy as np
 import pandas as pd
 import pyqtgraph as pg
+
+
+matplotlib.use('Agg')
+
 
 matplotlib.use('Agg')
 

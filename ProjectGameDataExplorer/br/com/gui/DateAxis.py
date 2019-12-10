@@ -1,10 +1,11 @@
+from datetime import datetime, timedelta
+import numpy
+from pyqtgraph import AxisItem
+from time import mktime
+
 import pyqtgraph as pg
 
 
-import numpy
-from pyqtgraph import AxisItem
-from datetime import datetime, timedelta
-from time import mktime
 class DateAxis(pg.AxisItem):
     """
     A tool that provides a date-time aware axis. It is implemented as an

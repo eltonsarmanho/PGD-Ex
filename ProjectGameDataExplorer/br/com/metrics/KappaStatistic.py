@@ -4,14 +4,15 @@ Created on 24 de ago de 2019
 @author: eltonss
 '''
 
+import csv
+from itertools import chain, repeat, islice, count
+import itertools
 from nltk import agreement
 import os
-import csv
 import os, fnmatch
-from sklearn.metrics import cohen_kappa_score
-from itertools import chain,repeat,islice,count
-import itertools
 import re
+from sklearn.metrics import cohen_kappa_score
+
 
 class KappaStatistic():
     

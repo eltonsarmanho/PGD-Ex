@@ -1,5 +1,6 @@
-import sys, os
 from PyQt5 import QtCore, QtGui, QtWidgets
+import sys, os
+
 
 __all__ = ['QRangeSlider']
 

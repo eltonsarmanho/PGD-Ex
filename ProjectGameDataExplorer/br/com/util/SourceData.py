@@ -2,9 +2,10 @@ from builtins import int
 from datetime import datetime, timedelta
 import glob
 
+from ProjectGameDataExplorer.br.com.util import E3Data
 import numpy as np
 import pandas as pd
-from ProjectGameDataExplorer.br.com.util import E3Data
+
 
 class SourceData:
        

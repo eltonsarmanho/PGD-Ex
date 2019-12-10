@@ -3,14 +3,15 @@ Created on 24 de abr de 2019
 
 @author: eltonss
 '''
-from pyqtgraph.Qt import PYQT5
-from PyQt5.QtCore import Qt, pyqtSignal
+from PyQt5 import QtCore, QtGui, QtWidgets, uic
 from PyQt5.QtCore import QDate, QDateTime, Qt, QTime
+from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtGui import QIcon, QPixmap, QBrush, QColor, QSlider
 from PyQt5.QtWidgets import QWidget, QMessageBox, QSplitter
-from PyQt5 import QtCore, QtGui, QtWidgets, uic
-from pyqtgraph.Qt import QtCore, QtGui, QT_LIB
 from _datetime import datetime
+from pyqtgraph.Qt import PYQT5
+from pyqtgraph.Qt import QtCore, QtGui, QT_LIB
+
 
 class TimeWidget(QtGui.QTimeEdit):
     '''

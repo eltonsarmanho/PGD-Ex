@@ -8,10 +8,12 @@
 #                                                                       #
 #########################################################################
 
-import pandas as pd
-import numpy as np
-import peakutils
 import math
+import peakutils
+
+import numpy as np
+import pandas as pd
+
 
 class EmpaticaHRV:
     def __init__(self):

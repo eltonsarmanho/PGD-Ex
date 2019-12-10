@@ -1,11 +1,10 @@
     
-from PyQt5.QtWidgets import QMainWindow, QApplication, QWidget, QAction, QTableWidget,QTableWidgetItem,QVBoxLayout
-from PyQt5.QtGui import QIcon,QAbstractItemView
-from PyQt5.QtCore import pyqtSlot,Qt
+from PyQt5.QtCore import pyqtSlot, Qt
+from PyQt5.QtGui import QIcon, QAbstractItemView
+from PyQt5.QtWidgets import QMainWindow, QApplication, QWidget, QAction, QTableWidget, QTableWidgetItem, QVBoxLayout
 import sys
 
 
- 
 class TableView(QTableWidget):
     def __init__(self, data,title, *args):
         QTableWidget.__init__(self, *args)
