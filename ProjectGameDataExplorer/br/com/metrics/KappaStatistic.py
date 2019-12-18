@@ -12,7 +12,10 @@ import os
 import os, fnmatch
 import re
 from sklearn.metrics import cohen_kappa_score
+import numpy as np
 
+import pandas as pd
+import collections 
 
 class KappaStatistic():
     
@@ -25,37 +28,35 @@ class KappaStatistic():
         pass;
     def getKappa(self,taskdata):
         ratingtask = agreement.AnnotationTask(data=taskdata)
-        return ratingtask.kappa();
-    def responseKappa(self,n_result,taskdata,rater_dict):
-        try:
-            t = []
-            txt = []
-            for element in range(0,n_result):
-                t.append(element)
-            for i in range(2,n_result+1):
-                c = list(itertools.combinations(t, i))
-                unq = set(c)            
-                for tuple in (unq):               
-                    rater =[]
-                    names = [];
-                    for index in tuple:
-                        names.append(rater_dict[index]); 
-                        array = [ [x,y,z] for x, y, z in taskdata if x == str(index)]                                                 
-                        for element in array:                    
-                            rater.append(element)
-                    kappa = self.getKappa(rater)
-                
-                    responde = "Kappa{0}:{1:.2f}".format(names,kappa)
-                    #print(responde)
-                    txt.append(responde)
-            return txt;
-        except:
-            print("Erro Segment {%s}");
-            txt = []
-            return txt;
+        #if(float(ratingtask.kappa()) >= 0.4):
+            #print("kappa: %.2f" % (ratingtask.kappa()))
+            #print("fleiss: %.2f " % (ratingtask.multi_kappa()))
+            #print("alpha: %.2f " % (ratingtask.alpha()))
+            #print("scotts: %.2f " % (ratingtask.pi()))
+            #return True;
+        return float(ratingtask.kappa());
     
+    def CountFrequency(self,arr): 
+        return collections.Counter(arr)
     
 if __name__ == '__main__':
+
+    group_emotion = dict(
+    Asco = 'Nenhum',Nothing ='Nenhum',Nenhum='Nenhum', none='Nenhum',
+    Irritado = 'Raiva',Raiva='Raiva',Loucura='Raiva',Furia='Raiva', Stress='Raiva',
+    Nojo='Desgosto', Repulsa='Desgosto', Maldisposicao='Desgosto', Nausea='Desgosto',
+    Horror='Medo', Assustado='Medo', Medo='Medo',Panico='Medo',
+    
+    Surpresa='Ansiedade',Preocupado = 'Ansiedade',Preocupacao='Ansiedade', Ansiedade='Ansiedade',
+    Concentracao='Ansiedade',Pavor='Ansiedade',Nervosismo='Ansiedade',Nervoso='Ansiedade',
+    
+    Solidao='Tristeza', Pesar='Tristeza',Tristeza='Tristeza',Frustracao='Tristeza',Vazio='Tristeza', Desanimo='Tristeza',
+    
+    Determinacao='Desejo',Insuficiencia='Desejo',Desejo='Desejo', Saudade='Desejo',
+    
+    Calmo = 'Calma',Calma='Calma', Tranquilidade='Calma',Descontracao='Calma', Suavidade='Calma',Relaxado='Calma',
+    
+    Felicidade='Felicidade', Divertido='Felicidade',Diversao='Felicidade', Satisfacao='Felicidade',Simpatia='Felicidade')
     
     def find(pattern, path):
         result = []
@@ -68,56 +69,72 @@ if __name__ == '__main__':
         length = len(alist)
         return [ alist[i*length // wanted_parts: (i+1)*length // wanted_parts] 
                  for i in range(wanted_parts) ]
+    def setJudge(index_rater,data):
+        index_response = 0;
+        for row in data:
+            if(row == 'X'): return 0;
+            taskdata.append([str(index_rater),index_response,row])
+            index_response = index_response + 1;
+        return 1;
     
+   
+    array_participant = [2,3,4,5,10,11,12,13,14,15,16,
+                         17,18,20,21,22,23,24,25,26,27,
+                         28,29,30,37,43,45,47];
     
-    group_emotion = dict(
-    Asco = 'Nenhum',Nothing ='Nenhum',Nenhum='Nenhum', none='Nenhum',
-    Irritado = 'Raiva',Raiva='Raiva',Loucura='Raiva',Furia='Raiva', Stress='Raiva',
-    Nojo='Desgosto', Repulsa='Desgosto', Maldisposicao='Desgosto', Nausea='Desgosto',
-    Horror='Medo', Assustado='Medo', Medo='Medo',Panico='Medo',
-    Surpresa='Ansiedade',Preocupado = 'Ansiedade',Preocupacao='Ansiedade', Ansiedade='Ansiedade',
-    Concentracao='Ansiedade',Pavor='Ansiedade',Nervosismo='Ansiedade',Nervoso='Ansiedade',
-    Solidao='Tristeza', Pesar='Tristeza',Tristeza='Tristeza',Frustracao='Tristeza',Vazio='Tristeza', Desanimo='Tristeza',
-    Determinacao='Desejo',Insuficiencia='Desejo',Desejo='Desejo', Saudade='Desejo',
-    Calmo = 'Calma',Calma='Calma', Tranquilidade='Calma',Descontracao='Calma', Suavidade='Calma',Relaxado='Calma',
-    Felicidade='Felicidade', Divertido='Felicidade',Diversao='Felicidade', Satisfacao='Felicidade',Simpatia='Felicidade')
+    array_participant = [2,3,4,5,10,11,12,13,14,15,16,
+                         17,18,20,21,23,24,25,26,27,
+                         28,29,30,37,43,45,47];
+                         
+    array_participant = [2,4,5,10,12,13,14,15,16,
+                         17,20,21,23,24,25,26,27,
+                         28,29,30,37,43,45,47];
+    array_participant = [2,3,4,5,10,11,12,13,14,15,16,
+                         17,18,20,21,23,24,25,26,27,
+                         28,29,30,37,43,45,47];
+                         
     
-    array_participant = [2,3,4,5,6,7,8,10,11,12,13,14,15,16,
-                         17,18,19,20,21,22,23,24,25,26,27,28,29,30];
-    for index_participant in array_participant:
-        participante = '/home/eltonss/Documents/Julgamentos/P{}'.format(index_participant)
-        for i in range (1,5):#1.,2,3,4
-            rater_dict = {}
+    dataset = pd.read_csv("/home/eltonss/Desktop/dataset.csv", sep=',') 
+    session = 4;
+    for participant in array_participant:
+        taskdata =[]
+
+        
+        filter = ((dataset['Player'] == participant) & (dataset['Session'] == session));
+        _rater_1 = (dataset[filter]['Rater 1'])
+        _rater_2 = (dataset[filter]['Rater 2'])
+        _rater_3 = (dataset[filter]['Rater 3'])
+        _rater_4 = (dataset[filter]['Rater 4'])        
+        _rater_5 = (dataset[filter]['Rater 5'])
+        _rater_6 = (dataset[filter]['Rater 6'])
+        index_rater = 0
+        index_rater = index_rater + setJudge(index_rater, _rater_1);
+        index_rater = index_rater + setJudge(index_rater, _rater_2);
+        index_rater = index_rater + setJudge(index_rater, _rater_3);
+        index_rater = index_rater + setJudge(index_rater, _rater_4);
+        index_rater = index_rater + setJudge(index_rater, _rater_5);
+        index_rater = index_rater + setJudge(index_rater, _rater_6);
+        rater= []
+        kappa = KappaStatistic();
+        print("Player and Session: (%s,%s)" % (participant,session))
+        for i in range(2,index_rater+1):
+                c = list(itertools.combinations(range(0,index_rater), i))
+                unq = set(c) 
+                for tuple in (unq):  
+                              
+                    rater =[]
+                    names = [];
+                    for index in tuple:
+                        array = [ [x,y,z] for x, y, z in taskdata if x == str(index)]                                                 
+                        for element in array:                    
+                            rater.append(element)
+                    resp = kappa.getKappa(rater)
+                    if(resp >= 0.4):                         
+                        
+                        print("Raters (Kappa = %.2f): %s " % (resp,str(tuple))) 
+                        
     
-            file_ = 'S{}_*.csv'.format(i)
-            session = 'Session {}'.format(i)
-            print("Participante {%s} - %s" % (index_participant,session))
-            result = find(file_, participante)    
-            if(len(result) <= 1):
-                continue
-            index_rater = 0    
-            taskdata =[]
-            for files in result:
-                matches = re.findall(r'S{}_(.+?)_P{}'.format(i,index_participant),files)
-                index_response = 0;
-                with open(files) as csv_file:
-                    csv_reader = csv.reader(csv_file, delimiter=';')
-                    line_count = 0
-                    for row in csv_reader:
-                        taskdata.append([str(index_rater),index_response,group_emotion[str(row[2])]])
-                        index_response = index_response + 1
-                
-                rater_dict[index_rater]  = matches[0]
-                index_rater = index_rater + 1;
-            kappa = KappaStatistic();
-            array1 = kappa.responseKappa(len(result), taskdata,rater_dict);
-            
-            c = [array1]      
-                    
-            with open(participante+".txt", "a") as file:
-                file.write("{0}\n".format(session))
-                for x in zip(*c):
-                    file.write("{0:<8}\n".format(*x))   
+ 
                 
         
 

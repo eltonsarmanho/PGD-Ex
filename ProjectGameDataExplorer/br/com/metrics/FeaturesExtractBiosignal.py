@@ -37,8 +37,8 @@ class FeaturesExtractBiosignal(object):
         
         # Loading Dataset
         self.dataset = pd.read_csv("/home/eltonss/Desktop/dataset.csv", sep=',') 
-        P = 19
-        array = [1,2,4]
+        P = 47
+        array = [1,2,3,4]
         _UT = UnixTime.UnixTime()
         for session  in array:
             filter = ((self.dataset['Player'] == P) & 

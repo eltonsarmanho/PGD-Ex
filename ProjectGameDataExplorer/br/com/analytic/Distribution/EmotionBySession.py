@@ -3,57 +3,23 @@ Created on 29 de nov de 2019
 
 @author: eltonss
 '''
-import biosppy
-from builtins import int
 from datetime import datetime
-from datetime import datetime, timedelta
-import glob
-import math
-import matplotlib
-import numpy
-import peakutils
-import sys, os
-from time import mktime
+from factor_analyzer.factor_analyzer import calculate_kmo, FactorAnalyzer
+from matplotlib.pyplot import plot
+from scipy import stats
+from statsmodels.stats.multicomp import MultiComparison
+import sys
 
-from pyphysio import EvenlySignal, UnevenlySignal
-from pyphysio.tests import TestData   
+from pyphysio import EvenlySignal
 
 from ProjectGameDataExplorer.br.com.util import UnixTime, SourceData
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import pyphysio as ph
-import pyphysio.estimators.Estimators as est
 import pyphysio.filters.Filters as flt
-import pyphysio.indicators.FrequencyDomain as fd_ind
-import pyphysio.indicators.TimeDomain as td_ind
 import seaborn as sns
+from datetime import timezone
 
-import itertools
-from matplotlib import pyplot
-from scipy import stats
-from sklearn import preprocessing
-from sklearn import svm
-from sklearn.metrics import classification_report, confusion_matrix
-from sklearn.model_selection import cross_val_score
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing.data import normalize
-
-from statsmodels.stats.multicomp import MultiComparison
-from statsmodels.stats.multicomp import pairwise_tukeyhsd
-from matplotlib.pyplot import plot
-matplotlib.use('Agg')
-# import the Signal classes
-# import data from included examples
-# create a signal
-# create a Filter
-from scipy.stats import rankdata, norm
-from scipy.stats import boxcox
-from matplotlib import pyplot
-from sklearn.preprocessing import MinMaxScaler
-
-from factor_analyzer.factor_analyzer import calculate_kmo, FactorAnalyzer
-from factor_analyzer.factor_analyzer import calculate_bartlett_sphericity
 
 __all__ = ['QRangeSlider']
 class EmotionBySession():
@@ -68,72 +34,77 @@ class EmotionBySession():
         '''
     
     def emotiondataDistribution(self,session):
-        self.dataset = pd.read_csv("/home/eltonss/Desktop/dataset.csv", sep=',') 
-        P = [2,3,4,5,6,9,10,11,12,13,14,15,16,17,18,19,20,21,23,24,25,26,27,28,29,30,37,43,45,47]
-        #P = [3,4]
-        
-        _UT = UnixTime.UnixTime()
-        dataframe = pd.DataFrame(columns=['Player','Session','ts', 'Happiness','Sadness',
-                                   'Anger','Fear','Surprise','Disgust']);   
-        auxHappiness = [];
-        auxFear = [];
-        auxSurprise = [];
-        auxDisgust = [];
-        auxSadness = [];
-        auxAnger = [];
-        auxGroup = [];
-        auxP = [];
-        auxTS = []
-        for participant in P:
-                print("Player: %s" % (participant))
-                filter = ((self.dataset['Player'] == participant) & 
-                              (self.dataset['Session'] == session));
-                auxi = np.min(self.dataset[filter]['Interval Initial'])
-                auxf = np.max(self.dataset[filter]['Interval Final'])
-                path_default = "/media/eltonss/9A2494A8249488C1/Users/eltonn/Dropbox/Dados Experimentos/Experimentos/Dados Coletados/Participante {}/EMOCAO.csv".format(participant)
-
-                if(participant == 2):
-                    path_default="/media/eltonss/9A2494A8249488C1/Users/eltonn/Dropbox/Dados Experimentos/Experimentos/Dados Coletados/Participante {}/Session {}/EMOCAO.csv".format(participant,session)
+        try:
+            self.dataset = pd.read_csv("/home/eltonss/Desktop/dataset.csv", sep=',') 
+            P = [2,3,4,5,6,9,10,11,12,13,14,15,16,17,18,19,20,21,23,24,25,26,27,28,29,30,37,43,45,47]
+            #P = [37]
+            UT = UnixTime.UnixTime()
+            dataframe = pd.DataFrame(columns=['Player','Session','ts', 'Happiness','Sadness',
+                                       'Anger','Fear','Surprise','Disgust']);   
+            auxHappiness = [];
+            auxFear = [];
+            auxSurprise = [];
+            auxDisgust = [];
+            auxSadness = [];
+            auxAnger = [];
+            auxGroup = [];
+            auxP = [];
+            auxTS = []
+            for participant in P:
+                    print("Player and Session: (%s,%s)" % (participant,session))
+                    filter = ((self.dataset['Player'] == participant) & 
+                                  (self.dataset['Session'] == session));
+                    auxi = np.min(self.dataset[filter]['Interval Initial'])
+                    auxf = np.max(self.dataset[filter]['Interval Final'])
+                  
+                    path_default = "/media/eltonss/9A2494A8249488C1/Users/eltonn/Dropbox/Dados Experimentos/Experimentos/Dados Coletados/Participante {}/EMOCAO.csv".format(participant)
+    
+                    if(participant == 2):
+                        path_default="/media/eltonss/9A2494A8249488C1/Users/eltonn/Dropbox/Dados Experimentos/Experimentos/Dados Coletados/Participante {}/Session {}/EMOCAO.csv".format(participant,session)
+                    
+                    if(participant == 5 and (session == 1 or session == 3)):
+                        path_default="/media/eltonss/9A2494A8249488C1/Users/eltonn/Dropbox/Dados Experimentos/Experimentos/Dados Coletados/Participante {}/Parte 2/EMOCAO.csv".format(participant)
+    
+    
+                    df = SourceData.SourceData().LoadDataFacialExpression(indexSession=None,
+                                                       path=path_default);
                 
-                if(participant == 5 and (session == 1 or session == 3)):
-                    path_default="/media/eltonss/9A2494A8249488C1/Users/eltonn/Dropbox/Dados Experimentos/Experimentos/Dados Coletados/Participante {}/Parte 2/EMOCAO.csv".format(participant)
-
-
-                df = SourceData.SourceData().LoadDataFacialExpression(indexSession=None,
-                                                   path=path_default);
-             
-                df['Time'] = [datetime.timestamp(dt) for dt in  df['Time']]
-                
-               
-                data = df[(df['Time'] >= auxi) & (df['Time'] <= auxf)]
-                #data = data[~(data == 0).any(axis=1)]
-                data = data.dropna()
-                for index, row in data.iterrows():
-                    #print(row['c1'], row['c2'])
-                    auxHappiness.append(row['Happiness'])
-                    auxFear.append(row['Fear'])
-                    auxSurprise.append(row['Surprise'])
-                    auxDisgust.append( row['Disgust'])
-                    auxSadness.append(row['Sadness'])
-                    auxAnger.append(row['Anger'])
-                    auxGroup.append(session);
-                    auxP.append(participant);
-                    auxTS.append(row['Time'])
-               
-        dataframe['Happiness'] = np.log(auxHappiness) ;       
-        dataframe['Fear'] =np.log(auxFear)  ;        
-        dataframe['Surprise'] =np.log(auxSurprise) ;        
-        dataframe['Disgust'] =np.log(auxDisgust);        
-        dataframe['Sadness'] =np.log(auxSadness) ;        
-        dataframe['Anger'] =  np.log(auxAnger) ;
-        dataframe['Session'] = auxGroup; 
-        dataframe['Player'] = auxP;  
-        dataframe['ts'] = auxTS;  
-        dataframe = dataframe[pd.notnull(dataframe)]
-        dataframe = dataframe[np.isfinite(dataframe)]
-        
-        print("Finish Session %s " % session)     
-        return dataframe;
+                    
+                    df['Time'] = [datetime.timestamp(dt) for dt in  df['Time']]
+                    
+                    data = df[(df['Time'] >= auxi) & (df['Time'] <= auxf)]
+                   
+                    #data = data[~(data == 0).any(axis=1)]
+                    data = data.dropna()
+                    for index, row in data.iterrows():
+                        #print(row['c1'], row['c2'])
+                        auxHappiness.append(row['Happiness'])
+                        auxFear.append(row['Fear'])
+                        auxSurprise.append(row['Surprise'])
+                        auxDisgust.append( row['Disgust'])
+                        auxSadness.append(row['Sadness'])
+                        auxAnger.append(row['Anger'])
+                        auxGroup.append(session);
+                        auxP.append(participant);
+                        auxTS.append(row['Time'])
+                   
+            dataframe['Happiness'] = np.log(auxHappiness) ;       
+            dataframe['Fear'] =np.log(auxFear)  ;        
+            dataframe['Surprise'] =np.log(auxSurprise) ;        
+            dataframe['Disgust'] =np.log(auxDisgust);        
+            dataframe['Sadness'] =np.log(auxSadness) ;        
+            dataframe['Anger'] =  np.log(auxAnger) ;
+            dataframe['Session'] = auxGroup; 
+            dataframe['Player'] = auxP;  
+            dataframe['ts'] = auxTS;  
+            dataframe = dataframe[pd.notnull(dataframe)]
+            dataframe = dataframe[np.isfinite(dataframe)]
+            
+            print("Finish Session %s " % session)     
+            return dataframe;
+        except: 
+            print("Oops!", sys.exc_info()[0], "occured.")
+            print("Erro em emotiondataDistribution")
     def runFactorAnalyzer(self,cols_to_norm,result):
         fa = FactorAnalyzer(rotation="varimax",n_factors=2)
         df = result[cols_to_norm]      
