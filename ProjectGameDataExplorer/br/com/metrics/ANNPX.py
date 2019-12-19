@@ -31,6 +31,7 @@ from sklearn.model_selection import train_test_split
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from collections import Counter
 class ANNPX(object):
     '''
     classdocs
@@ -59,7 +60,7 @@ class ANNPX(object):
         self.datasetPX = self.datasetPX.drop('Rater 6', 1)
         self.datasetPX = self.datasetPX.drop('Event', 1)
         
-        print(self.datasetPX)
+        #print(self.datasetPX)
         
     def run(self):
         X,y, X_train, X_test, y_train, y_test = self.preprocessing()
@@ -73,40 +74,41 @@ class ANNPX(object):
         le_sex = preprocessing.LabelEncoder()
         new = self.datasetPX.copy()
         le_sex.fit(['Raiva','Desgosto','Medo','Ansiedade','Tristeza','Desejo','Calma','Felicidade'])
+        print(Counter(new['Experience']))
         new['Experience'] = le_sex.transform(new['Experience']) 
-        
+        #print(Counter(new['Experience']))
         #To convert for array        
         y = np.asarray(new['Experience'])
         X = np.asarray(self.datasetPX.copy().drop('Experience', 1))#Remove the predict variable
         
         #Split dataset
-        X_train, X_test, y_train, y_test = train_test_split( X, y, test_size=0.2, random_state=4)
+        X_train, X_test, y_train, y_test = train_test_split( X, y, test_size=0.30, random_state=4)
         print ('Train set:', X_train.shape,  y_train.shape)
         print ('Test set:', X_test.shape,  y_test.shape)
         
         return X,y, X_train, X_test, y_train, y_test;
      
     def modelEvaluation(self,clf, X, y):
-        scores = cross_val_score(clf, X, y, scoring='f1_macro' ,cv=2)
+        scores = cross_val_score(clf, X, y, scoring='f1_macro' ,cv=5)
         #The mean score and the 95% confidence interval of the score estimate are hence given by:
         #print("The mean score and the 95% confidence interval of the score estimate are hence given by:")
         print("The mean score and the 95%% confidence interval of the score estimate are hence given by Accuracy: %0.2f (+/- %0.2f)" % (scores.mean(), scores.std() * 2))
         
     def evaluationMetric(self,y_test, yhat):   
         # Compute confusion matrix
-        cnf_matrix = confusion_matrix(y_test, yhat, labels=[0,1,2,3])
+        cnf_matrix = confusion_matrix(y_test, yhat, labels=[0,1,2,3,4,5,6,7])
         np.set_printoptions(precision=2)
         print (classification_report(y_test, yhat))
         
         # Plot non-normalized confusion matrix
         plt.figure()
-        self.plot_confusion_matrix(cnf_matrix, classes=['H. barbatus(0)','H. impetiginosus(1)',
-                                                   'H. ochraceus(2)','H. serratifolius(3)'],
+        self.plot_confusion_matrix(cnf_matrix, classes=['Raiva(0)','Desgosto(1)','Medo(2)','Ansiedade(3)','Tristeza(4)',
+                                                        'Desejo(5)','Calma(6)','Felicidade(7)'],
                               normalize= False,  title='Confusion matrix')
         
     def runClassification(self,X,y,X_train, X_test, y_train, y_test):
         #Creating classifier
-        clf = svm.SVC(kernel='linear')
+        clf = svm.SVC(kernel='poly')
         
         #Training and fitting the classifier 
         clf.fit(X_train, y_train) 
