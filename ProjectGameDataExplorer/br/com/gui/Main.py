@@ -10,19 +10,24 @@ import matplotlib
 from PyQt5.QtCore import  Qt, QUrl, QTime
 from PyQt5.QtMultimedia import QMediaContent, QMediaPlayer
 from PyQt5.QtMultimediaWidgets import QVideoWidget
-from PyQt5.QtWidgets import QMessageBox, QWidget, QSplitter, QStyle, QCheckBox, QListWidget
-from PyQt5.QtWidgets import QMainWindow, QApplication, QWidget, QAction, QTableWidget, QTableWidgetItem, QVBoxLayout
-from PyQt5.QtCore import pyqtSlot, Qt
 from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.Qt import QMainWindow, QDialog, QMessageBox, QApplication,\
+    QGridLayout, QFont, QPaintDevice, QFrame, QStyle, QSizePolicy,\
+    QDesktopWidget, QIntValidator, QAbstractItemView, QPainter, QAction
+from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QFileDialog, QWidget, QCheckBox, QPushButton,\
+    QSplitter, QHBoxLayout, QListWidget, QVBoxLayout, QLabel, QLineEdit,\
+    QFormLayout, QTableWidgetItem, QTableWidget
 
 from datetime import datetime
 from pyqtgraph import AxisItem
 import sys, os
 import math
 import numpy
-from PyQt5.QtGui import QIcon, QAbstractItemView
 
 import scipy.signal as scisig
+from PyQt5.QtGui import QColor, QPaintDeviceWindow
+from pyqtgraph.graphicsItems.ViewBox.ViewBox import ViewBox
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
@@ -35,20 +40,11 @@ import peakutils
 import biosppy
 from builtins import int
 import glob
-import seaborn as sns
 matplotlib.use('Agg')
-import pyphysio as ph
-# import the Signal classes
-from pyphysio import EvenlySignal, UnevenlySignal
-# import data from included examples
-from pyphysio.tests import TestData   
+
+
 # create a signal
 # create a Filter
-import pyphysio.filters.Filters as flt
-import pyphysio.estimators.Estimators as est
-
-import pyphysio.indicators.TimeDomain as td_ind
-import pyphysio.indicators.FrequencyDomain as fd_ind
 
 __all__ = ['QRangeSlider']
     
@@ -80,7 +76,8 @@ DEFAULT_CSS = """
     }
     """
 
-class FlowChartGame(QtGui.QMainWindow):
+
+class FlowChartGame(QMainWindow):
     
     _TIME_TAG_END = 0;
     _TIME_TAG_INITIAL = 0;
@@ -135,45 +132,43 @@ class FlowChartGame(QtGui.QMainWindow):
     
     def windowPlots(self):
         
-        self.mainbox = QtGui.QWidget()
+        self.mainbox = QWidget()
         self.mainbox.setGeometry(0, 0, 600, 800)
         self.setCentralWidget(self.mainbox)
         
-        layout = QtGui.QGridLayout()
+        layout = QGridLayout()
         self.mainbox.setLayout(layout)        
         self.canvas = pg.GraphicsLayoutWidget(border=(100, 100, 100))        
        
         self.mainbox.layout().addLayout(self.uiMainPanel(), 0, 0, 1, 1)
         self.MenuBar();
-      
         
     def MenuBar(self):
         
-        layout = QtGui.QHBoxLayout()
+        layout = QHBoxLayout()
         bar = self.menuBar()
         file = bar.addMenu("File")
         tools = bar.addMenu("Tools")
-                
         
-        resetPB = QtGui.QAction("Reset Progress Bar Timer", self)
+        resetPB = QAction("Reset Progress Bar Timer", self)
         resetPB.setShortcut("Ctrl+T")
         
-        metricEDA = QtGui.QAction("Extract Metrics", self)
-        timeIntervals = QtGui.QAction("Time Intervals(Session)", self)
-        emotionalComponents = QtGui.QAction("Emotional Components", self)
+        metricEDA = QAction("Extract Metrics", self)
+        timeIntervals = QAction("Time Intervals(Session)", self)
+        emotionalComponents = QAction("Emotional Components", self)
         
-        open = QtGui.QAction("Open E4 Data File with Video", self)
+        open = QAction("Open E4 Data File with Video", self)
         open.setShortcut("Ctrl+O")
-        annotation = QtGui.QAction("Annotation", self)
+        annotation = QAction("Annotation", self)
         annotation.setShortcut("Ctrl+J")
 
         file.addAction(open)
         # file.addAction(openSV)
                     
-        quit = QtGui.QAction("Quit", self)
+        quit = QAction("Quit", self)
         quit.setShortcut("Ctrl+Q") 
         
-        restart = QtGui.QAction("Restart", self)
+        restart = QAction("Restart", self)
         restart.setShortcut("Ctrl+R") 
         
         file.addAction(restart)
@@ -185,9 +180,8 @@ class FlowChartGame(QtGui.QMainWindow):
         tools.addAction(timeIntervals)
         tools.addAction(annotation)
 
-
-        file.triggered[QtGui.QAction].connect(self.processtrigger)
-        tools.triggered[QtGui.QAction].connect(self.processTools)
+        file.triggered[QAction].connect(self.processtrigger)
+        tools.triggered[QAction].connect(self.processTools)
 
         self.setLayout(layout)
     
@@ -223,27 +217,27 @@ class FlowChartGame(QtGui.QMainWindow):
                 self._LIST_EMOTION = listSelected;
                 self.workloadPlot()
                 destroyTable()
+
             def destroyTable():
                 self.win.destroy()
                
-            btSubmit = QtGui.QPushButton("Select") 
-            btCancel = QtGui.QPushButton("Cancel");
+            btSubmit = QPushButton("Select") 
+            btCancel = QPushButton("Cancel");
             btSubmit.clicked.connect(getSelectedInterval)
             btCancel.clicked.connect(destroyTable)
-            vbox = QtGui.QVBoxLayout()
+            vbox = QVBoxLayout()
             vbox.addWidget(self.tv)
-            hbox = QtGui.QVBoxLayout()
+            hbox = QVBoxLayout()
             hbox.addWidget(btSubmit)
             hbox.addWidget(btCancel)
             vbox.addLayout(hbox)
-            
             
             self.win.setLayout(vbox)
              
             self.win.setWindowTitle("PyQt")
             self.win.adjustSize()
             fg = self.frameGeometry()
-            cp = QtGui.QDesktopWidget().availableGeometry().center()
+            cp = QDesktopWidget().availableGeometry().center()
             fg.moveCenter(cp)
             self.win.move(fg.topLeft())
             self.win.show()            
@@ -263,7 +257,6 @@ class FlowChartGame(QtGui.QMainWindow):
             self.tv.resizeColumnsToContents()
             self.tv.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)                
 
-
             self.win = QWidget()
 
             def getSelectedInterval():
@@ -278,33 +271,30 @@ class FlowChartGame(QtGui.QMainWindow):
                 self.updateRangerSlider()
                 self.setPositionInPlayer(self._POSITION_INITIAL_SESSION)
                 destroyTable()
+
             def destroyTable():
                 self.win.destroy()
-
-
                
-            btSubmit = QtGui.QPushButton("Select") 
-            btCancel = QtGui.QPushButton("Cancel");
+            btSubmit = QPushButton("Select") 
+            btCancel = QPushButton("Cancel");
             btSubmit.clicked.connect(getSelectedInterval)
             btCancel.clicked.connect(destroyTable)
-            vbox = QtGui.QVBoxLayout()
+            vbox = QVBoxLayout()
             vbox.addWidget(self.tv)
-            hbox = QtGui.QVBoxLayout()
+            hbox = QVBoxLayout()
             hbox.addWidget(btSubmit)
             hbox.addWidget(btCancel)
             vbox.addLayout(hbox)
-            
             
             self.win.setLayout(vbox)
              
             self.win.setWindowTitle("PyQt")
             self.win.adjustSize()
             fg = self.frameGeometry()
-            cp = QtGui.QDesktopWidget().availableGeometry().center()
+            cp = QDesktopWidget().availableGeometry().center()
             fg.moveCenter(cp)
             self.win.move(fg.topLeft())
             self.win.show()                
-            
                 
         elif(q.text() == "Reset Progress Bar Timer"):
             self.reset()
@@ -330,6 +320,7 @@ class FlowChartGame(QtGui.QMainWindow):
         self.durationChanged(0)
         self.updateRangerSlider()
         self.clearLinearRegion()
+
     def processtrigger(self, q):
         
         if(q.text() == 'Open E4 Data File with Video'):
@@ -350,21 +341,24 @@ class FlowChartGame(QtGui.QMainWindow):
     
     def loadingVisualization(self):
         if(self.workload()):
-            self.updateRangerSlider()            
+            self.updateRangerSlider()    
+    
+    def openFileDialog(self):   
+        options = QFileDialog.Options()
+        options |= QFileDialog.DontUseNativeDialog
+        fileName, _ = QFileDialog.getOpenFileNames(self,"Open Files", "/home/elton/Documents","All Files (*)", options=options)
+        if fileName:
+            return fileName
+        return ''
             
 
     def workload(self):
                
-        dlg = QtGui.QFileDialog()       
-        dlg.setFileMode(QtGui.QFileDialog.ExistingFiles)
+        
         filenames = []
         try:
         
-            if dlg.exec_():
-                filenames = dlg.selectedFiles()               
-            else:
-                QMessageBox.information(self, "Message", "No appropriate file Located or no file selected"); 
-                return False
+            filenames = self.openFileDialog()
 
             for file in filenames:
                 filename = os.path.basename(file)               
@@ -388,7 +382,6 @@ class FlowChartGame(QtGui.QMainWindow):
                     self._FILE_EDA = file; 
                 elif ("EMOCAO") in filename:
                     self._FILE_EMOTION = file;            
-            
 
             if _TAG_FILE_VIDEO:
                 self.setTagVideo(_TAG_FILE_VIDEO);
@@ -421,7 +414,6 @@ class FlowChartGame(QtGui.QMainWindow):
             #    QMessageBox.information(self, "Message", "The Empatica E4 output or Emotion file not found");
             #    return False;
 
-
             return True;
     
         except IOError:
@@ -450,6 +442,7 @@ class FlowChartGame(QtGui.QMainWindow):
     def setConfigureTimeInterval(self, initialTime, endTime):
         self._TIME_TAG_INITIAL = initialTime;
         self._TIME_TAG_END = endTime;
+        print(self._TIME_TAG_INITIAL,self._TIME_TAG_END)
         self._DURATION_SESSION = self.UnixTime().diffTimeStampTags(self._TIME_TAG_INITIAL, self._TIME_TAG_END)
         self._POSITION_INITIAL_SESSION = self.UnixTime().diffTimeStamp(timeVideo, self._TIME_TAG_INITIAL) * 1000  
         self.loadingTimeProgressaBar(0, 0)
@@ -472,7 +465,6 @@ class FlowChartGame(QtGui.QMainWindow):
         global arrayTagsEnd;
 
         try:
-
             
             tags = self._SD.LoadDataTags(path)
             if(len(tags) == 0):
@@ -499,7 +491,6 @@ class FlowChartGame(QtGui.QMainWindow):
             f = open(path, "r")
             timeVideo = float(f.read());           
 
-
         except:
             QMessageBox.information(self, "Message", "Error during Loading Video Tag");
 
@@ -513,7 +504,7 @@ class FlowChartGame(QtGui.QMainWindow):
     
     def closeEvent(self, *args, **kwargs):
         sys.exit(app.exec_())
-        return QtGui.QMainWindow.closeEvent(self, *args, **kwargs)
+        return QMainWindow.closeEvent(self, *args, **kwargs)
     
     def checkButton(self, emotion):
         if emotion:
@@ -530,9 +521,9 @@ class FlowChartGame(QtGui.QMainWindow):
         self.buttonsActions[0].toggle()
 
     def uiButtons(self):
-        top = QtGui.QFrame()
+        top = QFrame()
 
-        layout = QtGui.QGridLayout()
+        layout = QGridLayout()
 
         self.buttonsEmotions = []
         index = 0
@@ -547,15 +538,14 @@ class FlowChartGame(QtGui.QMainWindow):
             layout.addWidget(self.buttonsEmotions[index], n % 10, n / 10)
             index = index + 1
 
-
         top.setLayout(layout)
-        top.setFrameShape(QtGui.QFrame.StyledPanel)
-        top.setFrameShadow(QtGui.QFrame.Raised)
+        top.setFrameShape(QFrame.StyledPanel)
+        top.setFrameShadow(QFrame.Raised)
 
         self.buttonsActions = []
         index = 0
-        bottom = QtGui.QFrame()
-        layout = QtGui.QGridLayout()
+        bottom = QFrame()
+        layout = QGridLayout()
 
         for n in range(len(self.actions)):
             button = QCheckBox(self.actions[index])
@@ -567,7 +557,7 @@ class FlowChartGame(QtGui.QMainWindow):
             index = index + 1
 
         index = 0
-        confirmButton = QtGui.QPushButton("")
+        confirmButton = QPushButton("")
         confirmButton.setIcon(self.style().standardIcon(QStyle.SP_DialogOkButton))
         confirmButton.setEnabled(True)
         confirmButton.setCheckable(True)
@@ -576,16 +566,16 @@ class FlowChartGame(QtGui.QMainWindow):
         # layout.addWidget(confirmButton)
         
         bottom.setLayout(layout)
-        bottom.setFrameShape(QtGui.QFrame.StyledPanel)
-        bottom.setFrameShadow(QtGui.QFrame.Raised)
+        bottom.setFrameShape(QFrame.StyledPanel)
+        bottom.setFrameShadow(QFrame.Raised)
         
-        splitter = QtGui.QSplitter(Qt.Vertical)
+        splitter = QSplitter(Qt.Vertical)
         splitter.addWidget(top)
         splitter.addWidget(bottom)
         splitter.addWidget(confirmButton)
         splitter.setSizes([75, 25, 25])
         
-        vbox = QtGui.QHBoxLayout()        
+        vbox = QHBoxLayout()        
         
         vbox.addWidget(splitter)
         return vbox;
@@ -595,7 +585,6 @@ class FlowChartGame(QtGui.QMainWindow):
     
         # Resize width and height
         self.listWidget.resize(300, 120)
-
             
         for n in range(self.totalWindows):
             self.listWidget.addItem(self.listNameGenerator(n, 'none', 'none')[0])
@@ -603,7 +592,7 @@ class FlowChartGame(QtGui.QMainWindow):
         self.listWidget.itemSelectionChanged.connect(lambda:self.eventBtstateAn(4))
         self.listWidget.setWindowTitle('PyQT QListwidget Demo')
 
-        gridl = QtGui.QGridLayout()
+        gridl = QGridLayout()
         gridl.addWidget(self.listWidget)
         return gridl;
 
@@ -620,48 +609,47 @@ class FlowChartGame(QtGui.QMainWindow):
         positionRangeSlider.handle.setTextColor(150)
         positionRangeSlider.setFixedHeight(30)
         
-        btPlayer = QtGui.QPushButton("")
+        btPlayer = QPushButton("")
         btPlayer.setIcon(self.style().standardIcon(QStyle.SP_MediaPlay))
         btPlayer.setEnabled(True)
         btPlayer.setCheckable(True)
         btPlayer.clicked.connect(lambda:self.eventBtstate(btPlayer))
 
-        btLastAn = QtGui.QPushButton("")
+        btLastAn = QPushButton("")
         btLastAn.setIcon(self.style().standardIcon(QStyle.SP_MediaSkipBackward))
         btLastAn.setEnabled(True)
         btLastAn.setCheckable(True)
         btLastAn.clicked.connect(lambda:self.eventBtstateAn(0))
 
-        btNextAn = QtGui.QPushButton("")
+        btNextAn = QPushButton("")
         btNextAn.setIcon(self.style().standardIcon(QStyle.SP_MediaSkipForward))
         btNextAn.setEnabled(True)
         btNextAn.setCheckable(True)
         btNextAn.clicked.connect(lambda:self.eventBtstateAn(1))
 
-        btAgainAn = QtGui.QPushButton("")
+        btAgainAn = QPushButton("")
         btAgainAn.setIcon(self.style().standardIcon(QStyle.SP_MediaSeekBackward))
         btAgainAn.setEnabled(True)
         btAgainAn.clicked.connect(lambda:self.eventBtstateAn(2))
         
-        editsTimeLayout = QtGui.QVBoxLayout()        
-        initialTimeLabel = QtGui.QLabel()
+        editsTimeLayout = QVBoxLayout()        
+        initialTimeLabel = QLabel()
 
         timeProgressBar.setText("00:00:00/00:00:00")
-        timeProgressBar.setSizePolicy(QtGui.QSizePolicy.Preferred,
-                QtGui.QSizePolicy.Maximum)    
+        timeProgressBar.setSizePolicy(QSizePolicy.Preferred,
+                QSizePolicy.Maximum)    
         editsTimeLayout.addStretch()    
         editsTimeLayout.addWidget(timeProgressBar)
         # editsTimeLayout.addStretch()
         
-        
-        vbox = QtGui.QHBoxLayout()
+        vbox = QHBoxLayout()
         vbox.addWidget(btLastAn)
         vbox.addWidget(btPlayer)
         vbox.addWidget(btNextAn)
         vbox.addWidget(btAgainAn)
         vbox.addWidget(positionRangeSlider)
 
-        box = QtGui.QVBoxLayout()
+        box = QVBoxLayout()
         box.addLayout(vbox)
         box.addLayout(editsTimeLayout)
         return box;
@@ -741,7 +729,6 @@ class FlowChartGame(QtGui.QMainWindow):
     def openButtonsEmotions(self):
             self.selectedEmotion = 'none'
             try:
-                
 
                 self.emotions = ["Raiva", "Loucura", "Furia", "Stress",
                                  "Nojo", "Repulsa", "Maldisposicao", "Nausea",
@@ -772,19 +759,19 @@ class FlowChartGame(QtGui.QMainWindow):
             sys.exit(app.exec_());
 
     def uiMainPanel(self):
-        self.splitter = QtGui.QSplitter(Qt.Horizontal)    
+        self.splitter = QSplitter(Qt.Horizontal)    
         self.splitter.setSizes([1000, 200])    
-        containerLeft = QtGui.QWidget()
+        containerLeft = QWidget()
         containerLeft.setLayout(self.uiPanelPlot())
         
-        containerRight = QtGui.QWidget()
+        containerRight = QWidget()
         containerRight.setLayout(self.uiPanelVideo())
         
         self.splitter.addWidget(containerLeft)
         self.splitter.addWidget(containerRight)
-        vbox = QtGui.QVBoxLayout()
+        vbox = QVBoxLayout()
         vbox.addWidget(self.splitter)
-        containerbottom = QtGui.QWidget()
+        containerbottom = QWidget()
         containerbottom.setLayout(self.uiTimeBar())
         vbox.addWidget(containerbottom)
         return vbox;
@@ -800,11 +787,10 @@ class FlowChartGame(QtGui.QMainWindow):
         self.isCreatedPlotHR = False;
         self.isCreatedPlotEmotion = False;
         
-        
         # global pwTemp;
-        splitter = QtGui.QSplitter(Qt.Vertical)
+        splitter = QSplitter(Qt.Vertical)
         
-        vbox = QtGui.QVBoxLayout()
+        vbox = QVBoxLayout()
         
         pwEDA = pg.PlotWidget(name='Plot1', title='EDA plot')    
         pwEDA.setLabel('bottom', 'Time (Seconds)')
@@ -821,12 +807,10 @@ class FlowChartGame(QtGui.QMainWindow):
         pwEmotion.setLabel('left', 'P(E)')
         splitter.addWidget(pwEmotion)
         
-        
-        # containerbottom = QtGui.QWidget()
+        # containerbottom = QWidget()
         # containerbottom.setLayout(self.uiTimeBar())
         # splitter.addWidget(containerbottom)
         vbox.addWidget(splitter)
-       
         
         return vbox
     
@@ -841,28 +825,27 @@ class FlowChartGame(QtGui.QMainWindow):
         positionRangeSlider.setFixedHeight(30)
         # positionRangeSlider.setFixedWidth(1000)
         
-        btPlayer = QtGui.QPushButton("")
+        btPlayer = QPushButton("")
         btPlayer.setIcon(self.style().standardIcon(QStyle.SP_MediaPlay))
         btPlayer.setEnabled(False)
         btPlayer.setCheckable(True)
         btPlayer.clicked.connect(lambda:self.eventBtstate(btPlayer))
         
-        editsTimeLayout = QtGui.QHBoxLayout()        
-        timeProgressBar = QtGui.QLabel()
+        editsTimeLayout = QHBoxLayout()        
+        timeProgressBar = QLabel()
         
         timeProgressBar.setText("00:00:00/00:00:00")
-        timeProgressBar.setSizePolicy(QtGui.QSizePolicy.Preferred,
-                QtGui.QSizePolicy.Maximum)    
+        timeProgressBar.setSizePolicy(QSizePolicy.Preferred,
+                QSizePolicy.Maximum)    
         editsTimeLayout.addStretch()    
         editsTimeLayout.addWidget(timeProgressBar)
         # editsTimeLayout.addStretch()
         
-        vbox = QtGui.QHBoxLayout()
+        vbox = QHBoxLayout()
         vbox.addWidget(btPlayer)
         vbox.addWidget(positionRangeSlider)
         
-        
-        box = QtGui.QVBoxLayout()
+        box = QVBoxLayout()
         box.addLayout(vbox)
         box.addLayout(editsTimeLayout)
         return box;
@@ -871,46 +854,45 @@ class FlowChartGame(QtGui.QMainWindow):
         print("uiPanelVideo")
         global timeLabel;
         global timeLabel2;
-        
 
-        timeLabel = QtGui.QLabel()
-        timeLabel.setSizePolicy(QtGui.QSizePolicy.Preferred,
-                QtGui.QSizePolicy.Maximum)
+        timeLabel = QLabel()
+        timeLabel.setSizePolicy(QSizePolicy.Preferred,
+                QSizePolicy.Maximum)
         timeLabel.setText("00:00:00")
         videoWidget = QVideoWidget()
         self.mediaPlayer.setVideoOutput(videoWidget)
-        top = QtGui.QFrame();
+        top = QFrame();
        
-        layout = QtGui.QVBoxLayout()
+        layout = QVBoxLayout()
         layout.addWidget(videoWidget)
         layout.addWidget(timeLabel)
         top.setLayout(layout)
-        top.setFrameShape(QtGui.QFrame.StyledPanel)
-        top.setFrameShadow(QtGui.QFrame.Raised)
+        top.setFrameShape(QFrame.StyledPanel)
+        top.setFrameShadow(QFrame.Raised)
         
         videoWidget = QVideoWidget()
         self.mediaPlayer2.setVideoOutput(videoWidget)
         
-        bottom = QtGui.QFrame()
-        layout = QtGui.QVBoxLayout()
+        bottom = QFrame()
+        layout = QVBoxLayout()
         layout.addWidget(videoWidget)
         bottom.setLayout(layout)
-        bottom.setFrameShape(QtGui.QFrame.StyledPanel)
-        bottom.setFrameShadow(QtGui.QFrame.Raised)
-        timeLabel2 = QtGui.QLabel()
-        timeLabel2.setSizePolicy(QtGui.QSizePolicy.Preferred,
-                QtGui.QSizePolicy.Maximum)
+        bottom.setFrameShape(QFrame.StyledPanel)
+        bottom.setFrameShadow(QFrame.Raised)
+        timeLabel2 = QLabel()
+        timeLabel2.setSizePolicy(QSizePolicy.Preferred,
+                QSizePolicy.Maximum)
         timeLabel2.setText("00:00:00")
         layout.addWidget(timeLabel2)
         # bottom.layout().setContentsMargins(0, 0, 150, 150)
         # bottom.layout().setSpacing(1)
         
-        splitter = QtGui.QSplitter(Qt.Vertical)
+        splitter = QSplitter(Qt.Vertical)
         splitter.addWidget(top)
         splitter.addWidget(bottom)
         splitter.setSizes([100, 100])
         
-        vbox = QtGui.QHBoxLayout()        
+        vbox = QHBoxLayout()        
         
         vbox.addWidget(splitter)
         return vbox;
@@ -969,7 +951,6 @@ class FlowChartGame(QtGui.QMainWindow):
         # print("setPositionInPlayer")
         self.mediaPlayer.setPosition(position)
         self.mediaPlayer2.setPosition(position)
-
 
     def handleError(self):
         # selfm.playButton.setEnabled(False)
@@ -1045,8 +1026,6 @@ class FlowChartGame(QtGui.QMainWindow):
     def returnInitWindow(self):
             newPosition = self.UnixTime().diffTimeStamp(timeVideo, self.getWindowInit())
             self.setPositionInPlayer(newPosition * 1000)
-           
-    
         
     def PlotEda(self, path):    
         print("PlotEda")   
@@ -1062,14 +1041,10 @@ class FlowChartGame(QtGui.QMainWindow):
         _UT = self.UnixTime();
 
         eda = self.EDAPeakDetectionScript(self)
-
         ts, RAW_EDA, filtered_eda, peaks, amp = eda.processEDA(PATH_EDA,
                                                                _UT.run(self._TIME_TAG_INITIAL),
                                                                _UT.run(self._TIME_TAG_END))
-
-        
         normalize_data_eda = self.ProcessingData().normalize(filtered_eda)
-        
         if(self.isCreatedPlotEda):
             plotEDA.clear()
             pwEDA.clear();
@@ -1081,11 +1056,10 @@ class FlowChartGame(QtGui.QMainWindow):
             pwEDA.getPlotItem().addLegend(offset=(10, 10))        
             pwEDA.addItem(pg.PlotDataItem(pen='r', name='GSR Value', antialias=False))
             pwEDA.addItem(pg.PlotDataItem(pen='b', name='GSR Peak', antialias=False))       
-            pwEDA.getPlotItem().getViewBox().setMouseMode(pg.ViewBox.RectMode)
+            pwEDA.getPlotItem().getViewBox().setMouseMode(ViewBox.RectMode)
             pwEDA.setMouseEnabled(x=False, y=False)
             axis = self.DateAxis(orientation='bottom')
             axis.attachToPlotItem(pwEDA.getPlotItem())
-            
         
         plotEDA.setData(x=ts, y=normalize_data_eda)        
         
@@ -1114,13 +1088,12 @@ class FlowChartGame(QtGui.QMainWindow):
         if(self.isCreatedPlotHR):
             plotHR.clear()
             pwHR.clear();       
-        
 
         plotHR = pwHR.plot(title="HR", pen='r')
         if(not self.isCreatedPlotHR):
             pwHR.getPlotItem().addLegend()
             pwHR.addItem(pg.PlotDataItem(pen='r', name='HR Value', antialias=False))
-            pwHR.getPlotItem().getViewBox().setMouseMode(pg.ViewBox.RectMode)
+            pwHR.getPlotItem().getViewBox().setMouseMode(ViewBox.RectMode)
 
             pwHR.setMouseEnabled(x=False, y=False)
             axis = self.DateAxis(orientation='bottom')
@@ -1128,7 +1101,6 @@ class FlowChartGame(QtGui.QMainWindow):
         
         normalize_data_hr = self.ProcessingData().normalize(HR_DF['hr'])
         plotHR.setData(x=segmente_timeHR, y=normalize_data_hr.tolist())
-
         
         plotHR = pwHR.plot(title="HRV", pen='b')
         if(not self.isCreatedPlotHR):
@@ -1187,7 +1159,6 @@ class FlowChartGame(QtGui.QMainWindow):
         self.createHR(segment_filteredBVP)
         
     def processingBVP(self, timestampInitial, timestampFinal):
-       
                 
         n_array = list(zip(self.TS_BVP, self.FILTERED_BVP)) 
        
@@ -1206,7 +1177,6 @@ class FlowChartGame(QtGui.QMainWindow):
             return;
             
         try:
-            
             
             df = self._SD.LoadDataFacialExpression(indexSession=None,
                                                    path=self.PATH_EMOTION_FACE);
@@ -1241,7 +1211,7 @@ class FlowChartGame(QtGui.QMainWindow):
                 pwEmotion.addItem(pg.PlotDataItem(pen='g', name='Surprise', antialias=False))
                 pwEmotion.addItem(pg.PlotDataItem(pen='k', name='Fear', antialias=False))
                 pwEmotion.addItem(pg.PlotDataItem(pen='m', name='Disgust', antialias=False))
-                pwEmotion.getPlotItem().getViewBox().setMouseMode(pg.ViewBox.RectMode)
+                pwEmotion.getPlotItem().getViewBox().setMouseMode(ViewBox.RectMode)
 
                 axis = self.DateAxis(orientation='bottom')
                 axis.attachToPlotItem(pwEmotion.getPlotItem()) 
@@ -1290,7 +1260,6 @@ class FlowChartGame(QtGui.QMainWindow):
 
         indexInitial = datetime.timestamp(ut.time_inc(self._TIME_TAG_INITIAL, 0))
 
-
         self.printRegion(indexInitial, indexInitial)        
             
     def addLinearRegionInPlotWidget(self):
@@ -1323,7 +1292,7 @@ class FlowChartGame(QtGui.QMainWindow):
     
     def paintEvent(self, event):
 
-        qp = QtGui.QPainter()
+        qp = QPainter()
         qp.begin(self)
         qp.end()
     
@@ -1333,7 +1302,6 @@ class FlowChartGame(QtGui.QMainWindow):
         minutes = duration.minute                
         seconds = duration.second 
         return (hours, minutes, seconds) 
-
     
     def is_video_file(self, filename):
         video_file_extensions = (
@@ -1351,40 +1319,41 @@ class FlowChartGame(QtGui.QMainWindow):
             QWidget.__init__(self, **kwargs)
             self.obj = obj
             FlowChartGame.reset(self.obj)
+
         def build(self):
             
-            e1 = QtGui.QLineEdit()
-            e1.setValidator(QtGui.QIntValidator())
+            e1 = QLineEdit()
+            e1.setValidator(QIntValidator())
             e1.setMaxLength(4)
             e1.setAlignment(Qt.AlignLeft)
-            e1.setFont(QtGui.QFont("Arial", 12))
+            e1.setFont(QFont("Arial", 12))
             e1.textChanged.connect(self.textchangedNumber)
             
-            e2 = QtGui.QLineEdit()
+            e2 = QLineEdit()
             e2.textChanged.connect(self.textchangedName)
             
-            e3 = QtGui.QLineEdit()
+            e3 = QLineEdit()
             e3.textChanged.connect(self.textchangedNumberSession)
-            e3.setValidator(QtGui.QIntValidator())
+            e3.setValidator(QIntValidator())
             e3.setMaxLength(1)
             e3.setAlignment(Qt.AlignLeft)
-            e3.setFont(QtGui.QFont("Arial", 12))
+            e3.setFont(QFont("Arial", 12))
             
-            flo = QtGui.QFormLayout()
+            flo = QFormLayout()
             flo.addRow("Number of Participant", e1)
             flo.addRow("Number of Session", e3)
             flo.addRow("Evaluator's name", e2)
           
-            splitter = QtGui.QSplitter(Qt.Horizontal)  
+            splitter = QSplitter(Qt.Horizontal)  
             splitter.setSizes([300, 300, 300])
     
-            vertSplitter = QtGui.QSplitter(Qt.Vertical)
+            vertSplitter = QSplitter(Qt.Vertical)
             vertSplitter.setSizes([500, 100])
     
-            containerLeft = QtGui.QWidget()
+            containerLeft = QWidget()
             containerLeft.setLayout(self.obj.uiList())
     
-            containerMid = QtGui.QWidget()
+            containerMid = QWidget()
             containerMid.setLayout(self.obj.uiButtons())
            
             splitter.addWidget(containerLeft)
@@ -1392,7 +1361,7 @@ class FlowChartGame(QtGui.QMainWindow):
     
             vertSplitter.addWidget(splitter)
     
-            gridl = QtGui.QVBoxLayout()
+            gridl = QVBoxLayout()
             gridl.addLayout(flo)
             gridl.addWidget(vertSplitter)
     
@@ -1401,12 +1370,11 @@ class FlowChartGame(QtGui.QMainWindow):
             self.setWindowTitle("Annotation")
             self.adjustSize()
             fg = self.frameGeometry()
-            cp = QtGui.QDesktopWidget().availableGeometry().center()
+            cp = QDesktopWidget().availableGeometry().center()
             fg.moveCenter(cp)
             self.move(fg.topLeft())
             self.show()
             return vertSplitter;
-        
         
         def closeEvent(self, *args, **kwargs):
             FlowChartGame.reset(self.obj)
@@ -1414,8 +1382,10 @@ class FlowChartGame(QtGui.QMainWindow):
         
         def textchangedNumber(self, text):
             self.obj._NUMBER_PARTICIPANT = text
+
         def textchangedNumberSession(self, text):
             self.obj._NUMBER_SESSION = text   
+
         def textchangedName(self, text):
             self.obj._EVALUATOR_NAME = text;
             
@@ -1438,7 +1408,6 @@ class FlowChartGame(QtGui.QMainWindow):
             offset = 1;
             start_WT = 4;
             end_WT = 4;
-            
 
             data = self.loadData_E4(signal)
             df = self.calcPeakFeatures(data, offset, thresh, start_WT, end_WT)
@@ -1615,10 +1584,7 @@ class FlowChartGame(QtGui.QMainWindow):
             featureData[['SCR_width', 'decay_time']] = featureData[['SCR_width', 'decay_time']].replace(0, np.nan)
             featureData['AUC'] = featureData['amp'] * featureData['SCR_width']
         
-            
-        
             return data
-        
     
     # draws a graph of the data with the peaks marked on it
     # assumes that 'data' dataframe already contains the 'peaks' column
@@ -1682,10 +1648,8 @@ class FlowChartGame(QtGui.QMainWindow):
             eda_data = self.loadSingleFile_E4(filepath, ["EDA"], 4, "250L")
             # Get the filtered data using a low-pass butterworth filter (cutoff:1hz, fs:8hz, order:6)
             eda_data['filtered_eda'] = self.butter_lowpass_filter(eda_data['EDA'], 1.0, 8, 6)
-        
            
             return eda_data
-        
         
         def interpolateDataTo8Hz(self, data, sample_rate, startTime):
             print("sample_rate %s " % (sample_rate))
@@ -1886,6 +1850,7 @@ class FlowChartGame(QtGui.QMainWindow):
             raise NotImplementedError()  # TODO
 
     class TableView(QTableWidget):
+
         def __init__(self, data, title, *args):
             QTableWidget.__init__(self, *args)
             self.data = data
@@ -1895,10 +1860,12 @@ class FlowChartGame(QtGui.QMainWindow):
             self.resizeRowsToContents()
             self.setSelectionMode(QAbstractItemView.SingleSelection)
             self.setSelectionBehavior(QAbstractItemView.SelectRows)
+
             # self#.show()
         def setModeMultiple(self):
             self.setSelectionMode(QAbstractItemView.MultiSelection)
             self.setSelectionBehavior(QAbstractItemView.SelectRows)
+
         def setData(self): 
             horHeaders = []
             item1 = QTableWidgetItem()
@@ -1914,8 +1881,10 @@ class FlowChartGame(QtGui.QMainWindow):
             self.setHorizontalHeaderLabels(horHeaders)
 
     class EmpaticaHRV:
+
         def __init__(self):
             pass
+
         def bvpPeaks(self, signal):
             cb = np.array(signal)
             x = peakutils.indexes(cb, thres=0.02 / max(cb), min_dist=0.1)
@@ -2002,11 +1971,11 @@ class FlowChartGame(QtGui.QMainWindow):
         classdocs
         '''
     
-    
         def __init__(self):
             '''
             Constructor
             '''
+
         def run(self, strTime):
             # ts = int("1284101485")
             ts = float(strTime)
@@ -2149,8 +2118,6 @@ class FlowChartGame(QtGui.QMainWindow):
            
         def __init__(self):
             print('Constructor SourceData')
-           
-        
      
         def LoadDataFacialExpression(self, path, indexSession=None):
             
@@ -2165,7 +2132,6 @@ class FlowChartGame(QtGui.QMainWindow):
             list_.append(df)
                 
             frame = pd.concat(list_)
-           
                 
             df = pd.DataFrame(columns=['Time', 'Neutral', 'Happiness', 'Sadness',
                                        'Anger', 'Fear', 'Surprise', 'Disgust']);    
@@ -2276,14 +2242,14 @@ class FlowChartGame(QtGui.QMainWindow):
             except: 
                 print("Oops!", sys.exc_info()[0], "occured.")
                 print("Erro in LoadDataTags")
+
         class E3Data:
+
             def __init__(self, dataType, startTime, samplingRate, data):
                 self.dataType = dataType
                 self.startTime = float (startTime)
                 self.samplingRate = float (samplingRate)
                 self.data = data
-            
-            
         
             def toString(self, unixTime=True):
                 if(unixTime):
@@ -2293,12 +2259,15 @@ class FlowChartGame(QtGui.QMainWindow):
                             self.dataType, datetime.datetime.fromtimestamp(self.startTime)
                             , datetime.datetime.fromtimestamp(float(self.getEndTime())), self.samplingRate)
                     return _string
+
             def getData(self):
                 return self.data
+
             def getEndTime(self):
                 _startDateTime = datetime.datetime.fromtimestamp(self.startTime)
                 _endDateTime = _startDateTime + datetime.timedelta (seconds=len(self.data) / self.samplingRate)
                 return  _endDateTime.strftime("%s")
+
             def getSlide(self, start, end):
                 _slideStartTime = datetime.datetime.fromtimestamp(self.startTime) 
                 
@@ -2344,15 +2313,12 @@ class FlowChartGame(QtGui.QMainWindow):
                     return self.E3Data(_DATA_TYPE, _startTime, _samplingRate, _data)   
 
     
-
-
-    
-
-    
 def scale(val, src, dst):
         return int(((val - src[0]) / float(src[1] - src[0])) * (dst[1] - dst[0]) + dst[0])
 
+
 class Ui_Form(object):
+
         def setupUi(self, Form):
             Form.setObjectName("QRangeSlider")
             Form.resize(300, 30)
@@ -2385,6 +2351,7 @@ class Ui_Form(object):
     
     
 class Element(QtWidgets.QGroupBox):
+
         def __init__(self, parent, main):
             super(Element, self).__init__(parent)
             self.main = main
@@ -2393,46 +2360,44 @@ class Element(QtWidgets.QGroupBox):
             self.parent().setStyleSheet(style)
     
         def textColor(self):
-            return getattr(self, '__textColor', QtGui.QColor(125, 125, 125))
+            return getattr(self, '__textColor', QColor(125, 125, 125))
     
         def setTextColor(self, color):
             if type(color) == tuple and len(color) == 3:
-                color = QtGui.QColor(color[0], color[1], color[2])
+                color = QColor(color[0], color[1], color[2])
             elif type(color) == int:
-                color = QtGui.QColor(color, color, color)
+                color = QColor(color, color, color)
             setattr(self, '__textColor', color)
     
-        def paintEvent(self, event):
-            qp = QtGui.QPainter()
-            qp.begin(self)
-            if self.main.drawValues():
-                self.drawText(event, qp)
-            qp.end()
+#         def paintEvent(self, event):
+#             qp = QPaintDeviceWindow()
+#             qp.begin(self)
+#             if self.main.drawValues():
+#                 self.drawText(event, qp)
+#             qp.end()
+
   
 class Head(Element):
+
         def __init__(self, parent, main):
             super(Head, self).__init__(parent, main)
     
         def drawText(self, event, qp):
             qp.setPen(self.textColor())
-            qp.setFont(QtGui.QFont('Arial', 10))
+            qp.setFont(QFont('Arial', 10))
             qp.drawText(event.rect(), QtCore.Qt.AlignLeft, str(self.main.min()))
-
-    
-        
         
         
 class Handle(Element):
+
         def __init__(self, parent, main):
             super(Handle, self).__init__(parent, main)
     
         def drawText(self, event, qp):
             qp.setPen(self.textColor())
-            qp.setFont(QtGui.QFont('Arial', 10))
+            qp.setFont(QFont('Arial', 10))
             qp.drawText(event.rect(), QtCore.Qt.AlignLeft, str(self.main.start()))
             qp.drawText(event.rect(), QtCore.Qt.AlignRight, str(self.main.end()))
-    
-    
             
         def mouseMoveEvent(self, event):
             event.accept()
@@ -2455,14 +2420,18 @@ class Handle(Element):
             e = self.main.end() + dx
             if s >= self.main.min() and e <= self.main.max():
                 self.main.setRange(s, e)
+
+
 class Tail(Element):
+
             def __init__(self, parent, main):
                 super(Tail, self).__init__(parent, main)
         
             def drawText(self, event, qp):
                 qp.setPen(self.textColor())
-                qp.setFont(QtGui.QFont('Arial', 10))
+                qp.setFont(QFont('Arial', 10))
                 qp.drawText(event.rect(), QtCore.Qt.AlignRight, str(self.main.max()))
+
 
 class QRangeSlider(QtWidgets.QWidget, Ui_Form):
         endValueChanged = QtCore.pyqtSignal(int)
@@ -2477,6 +2446,7 @@ class QRangeSlider(QtWidgets.QWidget, Ui_Form):
         _SPLIT_START = 1
         _SPLIT_END = 2
         isMoved = False;
+
         def __init__(self, parent=None):
             super(QRangeSlider, self).__init__(parent)
             self.setupUi(self)
@@ -2506,13 +2476,13 @@ class QRangeSlider(QtWidgets.QWidget, Ui_Form):
             self.setStart(0)
             self.setEnd(99)
             self.setDrawValues(False)
-            
-        
     
         def getMoved(self):
             return self.isMoved;
+
         def setMoved(self, value):
             self.isMoved = value   
+
         def min(self):
             return getattr(self, '__min', None)
     
@@ -2599,13 +2569,16 @@ class QRangeSlider(QtWidgets.QWidget, Ui_Form):
         def _handleMoveSplitter(self, xpos, index):
             self.setMoved(True)
             hw = self._splitter.handleWidth()
+
             def _lockWidth(widget):
                 width = widget.size().width()
                 widget.setMinimumWidth(width)
                 widget.setMaximumWidth(width)
+
             def _unlockWidth(widget):
                 widget.setMinimumWidth(0)
                 widget.setMaximumWidth(16777215)
+
             v = self._posToValue(xpos)
             if index == self._SPLIT_START:
                 _lockWidth(self._tail)
@@ -2626,12 +2599,8 @@ class QRangeSlider(QtWidgets.QWidget, Ui_Form):
             _unlockWidth(self._handle)  
 
 
-
-
-
-
 if __name__ == '__main__':
-    app = QtGui.QApplication(sys.argv)
+    app = QApplication(sys.argv)
     
     flow = FlowChartGame('testeee')
     flow.setGeometry(10, 10, 1000, 800)
@@ -2641,6 +2610,4 @@ if __name__ == '__main__':
     if sys.flags.interactive != 1 or not hasattr(QtCore, 'PYQT_VERSION'):
         sys.exit(app.exec_())
     sys.exit(app.exec_())
-        
-        
         

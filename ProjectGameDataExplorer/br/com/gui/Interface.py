@@ -27,12 +27,9 @@ import numpy as np
 import pandas as pd
 import pyqtgraph as pg
 
-
 matplotlib.use('Agg')
 
-
 matplotlib.use('Agg')
-
 
 
 class FlowChartGame(QtGui.QMainWindow):
@@ -48,11 +45,11 @@ class FlowChartGame(QtGui.QMainWindow):
     _FILE_PATH_SESSION = "";
     _VIDEO_SC = ""
     _VIDEO_EXTRA = ""
-    _TAG_FILE_VIDEO =""
+    _TAG_FILE_VIDEO = ""
     _TAG_FILE = ""
-    _EVALUATOR_NAME =""
+    _EVALUATOR_NAME = ""
     _NUMBER_PARTICIPANT = ""
-    _NUMBER_SESSION= ""
+    _NUMBER_SESSION = ""
     _DISCONNECT_RANGE_SLIDER = False;
     _ANNOTATION = False
 
@@ -99,7 +96,6 @@ class FlowChartGame(QtGui.QMainWindow):
        
         self.mainbox.layout().addLayout(self.uiMainPanel(), 0, 0, 1, 1)
         self.MenuBar();
-      
         
     def MenuBar(self):
         
@@ -107,7 +103,6 @@ class FlowChartGame(QtGui.QMainWindow):
         bar = self.menuBar()
         file = bar.addMenu("File")
         tools = bar.addMenu("Tools")
-                
         
         resetPB = QtGui.QAction("Reset Progress Bar Timer", self)
         resetPB.setShortcut("Ctrl+T")
@@ -138,7 +133,6 @@ class FlowChartGame(QtGui.QMainWindow):
         tools.addAction(emotionalComponents) 
         tools.addAction(timeIntervals)
         tools.addAction(annotation)
-
 
         file.triggered[QtGui.QAction].connect(self.processtrigger)
         tools.triggered[QtGui.QAction].connect(self.processTools)
@@ -177,6 +171,7 @@ class FlowChartGame(QtGui.QMainWindow):
                 self._LIST_EMOTION = listSelected;
                 self.workloadPlot()
                 destroyTable()
+
             def destroyTable():
                 self.win.destroy()
                
@@ -190,7 +185,6 @@ class FlowChartGame(QtGui.QMainWindow):
             hbox.addWidget(btSubmit)
             hbox.addWidget(btCancel)
             vbox.addLayout(hbox)
-            
             
             self.win.setLayout(vbox)
              
@@ -217,7 +211,6 @@ class FlowChartGame(QtGui.QMainWindow):
             self.tv.resizeColumnsToContents()
             self.tv.horizontalHeader().setSectionResizeMode(QtGui.QHeaderView.Stretch)                
 
-
             self.win = QWidget()
 
             def getSelectedInterval():
@@ -232,10 +225,9 @@ class FlowChartGame(QtGui.QMainWindow):
                 self.updateRangerSlider()
                 self.setPositionInPlayer(self._POSITION_INITIAL_SESSION)
                 destroyTable()
+
             def destroyTable():
                 self.win.destroy()
-
-
                
             btSubmit = QtGui.QPushButton("Select") 
             btCancel = QtGui.QPushButton("Cancel");
@@ -248,7 +240,6 @@ class FlowChartGame(QtGui.QMainWindow):
             hbox.addWidget(btCancel)
             vbox.addLayout(hbox)
             
-            
             self.win.setLayout(vbox)
              
             self.win.setWindowTitle("PyQt")
@@ -258,7 +249,6 @@ class FlowChartGame(QtGui.QMainWindow):
             fg.moveCenter(cp)
             self.win.move(fg.topLeft())
             self.win.show()                
-            
                 
         elif(q.text() == "Reset Progress Bar Timer"):
             self.reset()
@@ -283,6 +273,7 @@ class FlowChartGame(QtGui.QMainWindow):
         self.durationChanged(0)
         self.updateRangerSlider()
         self.clearLinearRegion()
+
     def processtrigger(self, q):
         
         if(q.text() == 'Open E4 Data File with Video'):
@@ -295,7 +286,7 @@ class FlowChartGame(QtGui.QMainWindow):
     
     def getWindowsAnnotation(self):
         self.currentWindow = 0
-        self.totalWindows = math.ceil((float(self._TIME_TAG_END) - float(self._TIME_TAG_INITIAL))/10)
+        self.totalWindows = math.ceil((float(self._TIME_TAG_END) - float(self._TIME_TAG_INITIAL)) / 10)
         self.windowEffects = []
 
         for i in range(self.totalWindows):
@@ -304,7 +295,6 @@ class FlowChartGame(QtGui.QMainWindow):
     def loadingVisualization(self):
         if(self.workload()):
             self.updateRangerSlider()            
-            
 
     def workload(self):
                
@@ -321,7 +311,7 @@ class FlowChartGame(QtGui.QMainWindow):
 
             for file in filenames:
                 filename = os.path.basename(file)               
-                self._FILE_PATH_SESSION=os.path.dirname(file)
+                self._FILE_PATH_SESSION = os.path.dirname(file)
                 
                 if(not(self.is_video_file(filename) or filename.endswith('.csv'))):
                     QMessageBox.information(self, "Message", "No appropriate file Located");
@@ -341,7 +331,6 @@ class FlowChartGame(QtGui.QMainWindow):
                     self._FILE_EDA = file; 
                 elif ("EMOCAO") in filename:
                     self._FILE_EMOTION = file;            
-            
 
             if _TAG_FILE_VIDEO:
                 self.setTagVideo(_TAG_FILE_VIDEO);
@@ -367,13 +356,12 @@ class FlowChartGame(QtGui.QMainWindow):
                 QMessageBox.information(self, "Message", "Error Loading Media: Face or hand's video Not Found");
                 return False;
             self.workloadPlot()
-            #if(self._FILE_BVP or self._FILE_EDA or self._FILE_EMOTION):
+            # if(self._FILE_BVP or self._FILE_EDA or self._FILE_EMOTION):
             #   QMessageBox.information(self, "Message", "The files were loaded successfully");
             #    
-            #else: 
+            # else: 
             #    QMessageBox.information(self, "Message", "The Empatica E4 output or Emotion file not found");
             #    return False;
-
 
             return True;
     
@@ -452,7 +440,6 @@ class FlowChartGame(QtGui.QMainWindow):
             f = open(path, "r")
             timeVideo = float(f.read());           
 
-
         except:
             QMessageBox.information(self, "Message", "Error during Loading Video Tag");
 
@@ -500,7 +487,6 @@ class FlowChartGame(QtGui.QMainWindow):
             layout.addWidget(self.buttonsEmotions[index], n % 10, n / 10)
             index = index + 1
 
-
         top.setLayout(layout)
         top.setFrameShape(QtGui.QFrame.StyledPanel)
         top.setFrameShadow(QtGui.QFrame.Raised)
@@ -547,7 +533,6 @@ class FlowChartGame(QtGui.QMainWindow):
     
         # Resize width and height
         self.listWidget.resize(300, 120)
-
             
         for n in range(self.totalWindows):
             self.listWidget.addItem(self.listNameGenerator(n, 'none', 'none')[0])
@@ -605,7 +590,6 @@ class FlowChartGame(QtGui.QMainWindow):
         editsTimeLayout.addWidget(timeProgressBar)
         # editsTimeLayout.addStretch()
         
-        
         vbox = QtGui.QHBoxLayout()
         vbox.addWidget(btLastAn)
         vbox.addWidget(btPlayer)
@@ -635,7 +619,7 @@ class FlowChartGame(QtGui.QMainWindow):
 
         if type == 3:
             # windowEffects[currentWindow] = (currentEffect)
-            texto,csv = self.listNameGenerator(self.currentWindow, 
+            texto, csv = self.listNameGenerator(self.currentWindow,
                                            self.selectedEmotion,
                                            self.selectedAction)
             self.listWidget.item(self.currentWindow).setText(texto)
@@ -654,13 +638,13 @@ class FlowChartGame(QtGui.QMainWindow):
                     self.returnInitWindow()
         
     def exportAffections(self):
-        _START= datetime.fromtimestamp(float(self._TIME_TAG_INITIAL)).strftime('%H:%M:%S');
-        _END= datetime.fromtimestamp(float(self._TIME_TAG_END)).strftime('%H:%M:%S');
-        _NAME = "affections_{0}_{1}.csv".format(_START,_END)
-        _FILE = "{0}/{1}".format(self._FILE_PATH_SESSION,_NAME)
-        #_HEADER = "{0},{1},{2},{3}".format("Start","End","Emotion","Action")
+        _START = datetime.fromtimestamp(float(self._TIME_TAG_INITIAL)).strftime('%H:%M:%S');
+        _END = datetime.fromtimestamp(float(self._TIME_TAG_END)).strftime('%H:%M:%S');
+        _NAME = "affections_{0}_{1}.csv".format(_START, _END)
+        _FILE = "{0}/{1}".format(self._FILE_PATH_SESSION, _NAME)
+        # _HEADER = "{0},{1},{2},{3}".format("Start","End","Emotion","Action")
         fileAffection = open(_FILE, "w")
-        #fileAffection.write(_HEADER + "\n")
+        # fileAffection.write(_HEADER + "\n")
         for text in self.windowEffects:
             fileAffection.write(text + "\n")
 
@@ -685,9 +669,9 @@ class FlowChartGame(QtGui.QMainWindow):
         t = QTime(hours, minutes, seconds);
         hours2, minutes2, seconds2 = self.getTimeDetails(datetime.fromtimestamp(float(endTime)))
         t2 = QTime(hours2, minutes2, seconds2);  
-        texto = "{0}-{1}|{2}|{3}".format(t.toString(),t2.toString(),emo,act);
-        texto_csv = "{0};{1};{2};{3}".format(initTime,endTime,emo,act);
-        return  ( texto,texto_csv )
+        texto = "{0}-{1}|{2}|{3}".format(t.toString(), t2.toString(), emo, act);
+        texto_csv = "{0};{1};{2};{3}".format(initTime, endTime, emo, act);
+        return  (texto, texto_csv)
 
     def openButtonsEmotions(self, file):
             self.selectedEmotion = 'none'
@@ -697,7 +681,6 @@ class FlowChartGame(QtGui.QMainWindow):
                 self.emotions.append("Nothing")
                 for n in range(numTags):
                     self.emotions.append(file.readline().rstrip())
-    
     
             except:
                 print("Erro during Loading Emotion Buttons")
@@ -747,7 +730,6 @@ class FlowChartGame(QtGui.QMainWindow):
         self.isCreatedPlotHR = False;
         self.isCreatedPlotEmotion = False;
         
-        
         # global pwTemp;
         splitter = QtGui.QSplitter(Qt.Vertical)
         
@@ -768,12 +750,10 @@ class FlowChartGame(QtGui.QMainWindow):
         pwEmotion.setLabel('left', 'P(E)')
         splitter.addWidget(pwEmotion)
         
-        
         # containerbottom = QtGui.QWidget()
         # containerbottom.setLayout(self.uiTimeBar())
         # splitter.addWidget(containerbottom)
         vbox.addWidget(splitter)
-       
         
         return vbox
     
@@ -808,7 +788,6 @@ class FlowChartGame(QtGui.QMainWindow):
         vbox.addWidget(btPlayer)
         vbox.addWidget(positionRangeSlider)
         
-        
         box = QtGui.QVBoxLayout()
         box.addLayout(vbox)
         box.addLayout(editsTimeLayout)
@@ -818,7 +797,6 @@ class FlowChartGame(QtGui.QMainWindow):
         print("uiPanelVideo")
         global timeLabel;
         global timeLabel2;
-        
 
         timeLabel = QtGui.QLabel()
         timeLabel.setSizePolicy(QtGui.QSizePolicy.Preferred,
@@ -917,7 +895,6 @@ class FlowChartGame(QtGui.QMainWindow):
         self.mediaPlayer.setPosition(position)
         self.mediaPlayer2.setPosition(position)
 
-
     def handleError(self):
         # selfm.playButton.setEnabled(False)
         timeLabel.setText("Error: " + self.mediaPlayer.errorString())
@@ -1001,7 +978,6 @@ class FlowChartGame(QtGui.QMainWindow):
         global ts;
         global metricsEDA;
         global plotEDA
-            
      
         eda = EDAPeakDetectionScript()
         
@@ -1026,7 +1002,6 @@ class FlowChartGame(QtGui.QMainWindow):
             pwEDA.setMouseEnabled(x=False, y=False)
             axis = DateAxis(orientation='bottom')
             axis.attachToPlotItem(pwEDA.getPlotItem())
-            
         
         plotEDA.setData(x=ts, y=normalize_data_eda)        
         
@@ -1060,7 +1035,6 @@ class FlowChartGame(QtGui.QMainWindow):
         if(self.isCreatedPlotHR):
             plotHR.clear()
             pwHR.clear();       
-        
 
         plotHR = pwHR.plot(title="HR", pen='r')
         if(not self.isCreatedPlotHR):
@@ -1074,7 +1048,6 @@ class FlowChartGame(QtGui.QMainWindow):
         
         normalize_data_hr = ProcessingData().normalize(df['hr'])
         plotHR.setData(x=timeHR, y=normalize_data_hr.tolist())
-
         
         plotHR = pwHR.plot(title="HRV", pen='b')
         if(not self.isCreatedPlotHR):
@@ -1207,7 +1180,6 @@ class FlowChartGame(QtGui.QMainWindow):
 
         indexInitial = datetime.timestamp(ut.time_inc(self._TIME_TAG_INITIAL, 0))
 
-
         self.printRegion(indexInitial, indexInitial)        
             
     def addLinearRegionInPlotWidget(self):
@@ -1250,7 +1222,6 @@ class FlowChartGame(QtGui.QMainWindow):
         minutes = duration.minute                
         seconds = duration.second 
         return (hours, minutes, seconds) 
-
     
     def is_video_file(self, filename):
         video_file_extensions = (
@@ -1268,14 +1239,14 @@ class FlowChartGame(QtGui.QMainWindow):
             QWidget.__init__(self, **kwargs)
             self.obj = obj
             FlowChartGame.reset(self.obj)
+
         def build(self):
-            
             
             e1 = QtGui.QLineEdit()
             e1.setValidator(QtGui.QIntValidator())
             e1.setMaxLength(4)
             e1.setAlignment(Qt.AlignLeft)
-            e1.setFont(QtGui.QFont("Arial",12))
+            e1.setFont(QtGui.QFont("Arial", 12))
             e1.textChanged.connect(self.textchangedNumber)
             e2 = QtGui.QLineEdit()
             e2.textChanged.connect(self.textchangedName)
@@ -1284,12 +1255,11 @@ class FlowChartGame(QtGui.QMainWindow):
             e3.setValidator(QtGui.QIntValidator())
             e3.setMaxLength(1)
             e3.setAlignment(Qt.AlignLeft)
-            e3.setFont(QtGui.QFont("Arial",12))
+            e3.setFont(QtGui.QFont("Arial", 12))
             flo = QtGui.QFormLayout()
             flo.addRow("Number of Participant", e1)
-            flo.addRow("Number of Session",e3)
-            flo.addRow("Evaluator's name",e2)
-            
+            flo.addRow("Number of Session", e3)
+            flo.addRow("Evaluator's name", e2)
             
             splitter = QtGui.QSplitter(Qt.Horizontal)  
             splitter.setSizes([300, 300, 300])
@@ -1326,12 +1296,17 @@ class FlowChartGame(QtGui.QMainWindow):
         def closeEvent(self, *args, **kwargs):
             FlowChartGame.reset(self.obj)
             return QWidget.closeEvent(self, *args, **kwargs)
-        def textchangedNumber(self,text):
+
+        def textchangedNumber(self, text):
             self.obj._NUMBER_PARTICIPANT = text
-        def textchangedNumberSession(self,text):
+
+        def textchangedNumberSession(self, text):
             self.obj._NUMBER_SESSION = text   
-        def textchangedName(self,text):
+
+        def textchangedName(self, text):
             self.obj._EVALUATOR_NAME = text;
+
+
 if __name__ == '__main__':
     app = QtGui.QApplication(sys.argv)
     
@@ -1343,6 +1318,4 @@ if __name__ == '__main__':
     if sys.flags.interactive != 1 or not hasattr(QtCore, 'PYQT_VERSION'):
         sys.exit(app.exec_())
     sys.exit(app.exec_())
-        
-        
         

@@ -1,7 +1,6 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 import sys, os
 
-
 __all__ = ['QRangeSlider']
 
 DEFAULT_CSS = """
@@ -34,10 +33,11 @@ QRangeSlider > QSplitter::handle:pressed {
 
 
 def scale(val, src, dst):
-    return int(((val - src[0]) / float(src[1]-src[0])) * (dst[1]-dst[0]) + dst[0])
+    return int(((val - src[0]) / float(src[1] - src[0])) * (dst[1] - dst[0]) + dst[0])
 
 
 class Ui_Form(object):
+
     def setupUi(self, Form):
         Form.setObjectName("QRangeSlider")
         Form.resize(300, 30)
@@ -68,9 +68,9 @@ class Ui_Form(object):
         _translate = QtCore.QCoreApplication.translate
         Form.setWindowTitle(_translate("QRangeSlider", "QRangeSlider"))
     
-    
 
 class Element(QtWidgets.QGroupBox):
+
     def __init__(self, parent, main):
         super(Element, self).__init__(parent)
         self.main = main
@@ -97,6 +97,7 @@ class Element(QtWidgets.QGroupBox):
   
 
 class Head(Element):
+
     def __init__(self, parent, main):
         super(Head, self).__init__(parent, main)
 
@@ -104,10 +105,10 @@ class Head(Element):
         qp.setPen(self.textColor())
         qp.setFont(QtGui.QFont('Arial', 10))
         qp.drawText(event.rect(), QtCore.Qt.AlignLeft, str(self.main.min()))
-
     
         
 class Tail(Element):
+
     def __init__(self, parent, main):
         super(Tail, self).__init__(parent, main)
 
@@ -116,10 +117,12 @@ class Tail(Element):
         qp.setFont(QtGui.QFont('Arial', 10))
         qp.drawText(event.rect(), QtCore.Qt.AlignRight, str(self.main.max()))
     
-        #movedCondition  = True;
-        #return movedCondition;
+        # movedCondition  = True;
+        # return movedCondition;
+
 
 class Handle(Element):
+
     def __init__(self, parent, main):
         super(Handle, self).__init__(parent, main)
 
@@ -128,8 +131,6 @@ class Handle(Element):
         qp.setFont(QtGui.QFont('Arial', 10))
         qp.drawText(event.rect(), QtCore.Qt.AlignLeft, str(self.main.start()))
         qp.drawText(event.rect(), QtCore.Qt.AlignRight, str(self.main.end()))
-
-
         
     def mouseMoveEvent(self, event):
         event.accept()
@@ -167,6 +168,7 @@ class QRangeSlider(QtWidgets.QWidget, Ui_Form):
     _SPLIT_START = 1
     _SPLIT_END = 2
     isMoved = False;
+
     def __init__(self, parent=None):
         super(QRangeSlider, self).__init__(parent)
         self.setupUi(self)
@@ -196,13 +198,13 @@ class QRangeSlider(QtWidgets.QWidget, Ui_Form):
         self.setStart(0)
         self.setEnd(99)
         self.setDrawValues(False)
-        
-    
 
     def getMoved(self):
         return self.isMoved;
-    def setMoved(self,value):
+
+    def setMoved(self, value):
         self.isMoved = value   
+
     def min(self):
         return getattr(self, '__min', None)
 
@@ -261,11 +263,11 @@ class QRangeSlider(QtWidgets.QWidget, Ui_Form):
     def keyPressEvent(self, event):
         key = event.key()
         if key == QtCore.Qt.Key_Left:
-            s = self.start()-1
-            e = self.end()-1
+            s = self.start() - 1
+            e = self.end() - 1
         elif key == QtCore.Qt.Key_Right:
-            s = self.start()+1
-            e = self.end()+1
+            s = self.start() + 1
+            e = self.end() + 1
         else:
             event.ignore()
             return
@@ -289,13 +291,16 @@ class QRangeSlider(QtWidgets.QWidget, Ui_Form):
     def _handleMoveSplitter(self, xpos, index):
         self.setMoved(True)
         hw = self._splitter.handleWidth()
+
         def _lockWidth(widget):
             width = widget.size().width()
             widget.setMinimumWidth(width)
             widget.setMaximumWidth(width)
+
         def _unlockWidth(widget):
             widget.setMinimumWidth(0)
             widget.setMaximumWidth(16777215)
+
         v = self._posToValue(xpos)
         if index == self._SPLIT_START:
             _lockWidth(self._tail)
@@ -315,6 +320,7 @@ class QRangeSlider(QtWidgets.QWidget, Ui_Form):
         _unlockWidth(self._head)
         _unlockWidth(self._handle)
 
+
 if __name__ == '__main__':
 
     app = QtWidgets.QApplication(sys.argv)
@@ -328,6 +334,5 @@ if __name__ == '__main__':
     rs2.setMax(100)
     rs2.setRange(30, 80)
     rs2.setDrawValues(True)
-    
     
     app.exec_()

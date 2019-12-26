@@ -18,21 +18,21 @@ class TimeWidget(QtGui.QTimeEdit):
     classdocs
     '''
 
-
     def __init__(self, params):
         super(TimeWidget, self).__init__()
         '''
         Constructor
         '''
+
     def stepBy(self, steps):    
       
-        if (self.time().minute()==59 and steps>0):
-            self.setTime(QTime(self.time().hour()+1,0,self.time().second(),self.time().msec()));
-        elif (self.time().minute()==0 and steps<0):
-            self.setTime(QTime(self.time().hour()-1,59,self.time().second(),self.time().msec()));
-        elif (self.time().second()==59 and steps>0):
-            self.setTime(QTime(self.time().hour(),self.time().minute()+1,0,self.time().msec()));
-        elif (self.time().second()==0 and steps<0):
-            self.setTime(QTime(self.time().hour(),self.time().minute()-1,59,self.time().msec()));
+        if (self.time().minute() == 59 and steps > 0):
+            self.setTime(QTime(self.time().hour() + 1, 0, self.time().second(), self.time().msec()));
+        elif (self.time().minute() == 0 and steps < 0):
+            self.setTime(QTime(self.time().hour() - 1, 59, self.time().second(), self.time().msec()));
+        elif (self.time().second() == 59 and steps > 0):
+            self.setTime(QTime(self.time().hour(), self.time().minute() + 1, 0, self.time().msec()));
+        elif (self.time().second() == 0 and steps < 0):
+            self.setTime(QTime(self.time().hour(), self.time().minute() - 1, 59, self.time().msec()));
         else:  super(TimeWidget, self).stepBy(steps);
         

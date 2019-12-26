@@ -31,13 +31,13 @@ class DateAxis(pg.AxisItem):
         rounding in a decimal base
         """
 
-        maxMajSteps = int(size/self._pxLabelWidth)
+        maxMajSteps = int(size / self._pxLabelWidth)
        
         dt1 = datetime.fromtimestamp(minVal)
         dt2 = datetime.fromtimestamp(maxVal)
-        #print("dt(%s,%s)" %(dt1,dt2))
+        # print("dt(%s,%s)" %(dt1,dt2))
         dx = maxVal - minVal
-        #print("dx (%s): "%dx)
+        # print("dx (%s): "%dx)
         majticks = []
 
         if dx > 63072001:  # 3600s*24*(365+366) = 2 years (count leap year)
