@@ -32,9 +32,9 @@ class KappaStatistic():
         ratingtask = agreement.AnnotationTask(data=taskdata)
         # if(float(ratingtask.kappa()) >= 0.4):
             # print("kappa: %.2f" % (ratingtask.kappa()))
-            # print("fleiss: %.2f " % (ratingtask.multi_kappa()))
-            # print("alpha: %.2f " % (ratingtask.alpha()))
-            # print("scotts: %.2f " % (ratingtask.pi()))
+        print("fleiss: %.2f " % (ratingtask.multi_kappa()))
+        print("alpha: %.2f " % (ratingtask.alpha()))
+        print("scotts: %.2f " % (ratingtask.pi()))
             # return True;
         return float(ratingtask.kappa());
     
@@ -97,41 +97,53 @@ if __name__ == '__main__':
                          17, 18, 20, 21, 23, 24, 25, 26, 27,
                          28, 29, 30, 37, 43, 45, 47];
     
-    dataset = pd.read_csv("/home/eltonss/Desktop/dataset.csv", sep=',') 
+    dataset = pd.read_csv("/home/elton/Desktop/dataset.csv", sep=',') 
+    #dataset = pd.read_csv("/home/elton/Desktop/datasetResultado.csv", sep=',') 
     session = 4;
+    lst = []
     for participant in array_participant:
-        taskdata = []
-        
-        filter = ((dataset['Player'] == participant) & (dataset['Session'] == session));
-        _rater_1 = (dataset[filter]['Rater 1'])
-        _rater_2 = (dataset[filter]['Rater 2'])
-        _rater_3 = (dataset[filter]['Rater 3'])
-        _rater_4 = (dataset[filter]['Rater 4'])        
-        _rater_5 = (dataset[filter]['Rater 5'])
-        _rater_6 = (dataset[filter]['Rater 6'])
-        index_rater = 0
-        index_rater = index_rater + setJudge(index_rater, _rater_1);
-        index_rater = index_rater + setJudge(index_rater, _rater_2);
-        index_rater = index_rater + setJudge(index_rater, _rater_3);
-        index_rater = index_rater + setJudge(index_rater, _rater_4);
-        index_rater = index_rater + setJudge(index_rater, _rater_5);
-        index_rater = index_rater + setJudge(index_rater, _rater_6);
-        rater = []
-        kappa = KappaStatistic();
-        print("Player and Session: (%s,%s)" % (participant, session))
-        for i in range(2, index_rater + 1):
-                c = list(itertools.combinations(range(0, index_rater), i))
-                unq = set(c) 
-                for tuple in (unq):  
-                              
-                    rater = []
-                    names = [];
-                    for index in tuple:
-                        array = [ [x, y, z] for x, y, z in taskdata if x == str(index)]                                                 
-                        for element in array:                    
-                            rater.append(element)
-                    resp = kappa.getKappa(rater)
-                    if(resp >= 0.4):                         
-                        
-                        print("Raters (Kappa = %.2f): %s " % (resp, str(tuple))) 
+        try:
+            taskdata = []
+            
+            filter = ((dataset['Player'] == participant) & (dataset['Session'] == session));
+            #filter = ((dataset['Player'] == 51) & (dataset['Event'].isin(['Cambio'])));
+            #filter = ((dataset['Player'] == 51) & (dataset['Event'].isin(['Colisao'])));
+            #filter = ((dataset['Player'] == 51) & (dataset['Event'].isin(['Roll over'])));
+            #filter = ((dataset['Player'] == 51) & (dataset['Event'].isin(['Off Road Over'])));
+            _rater_1 = (dataset[filter]['Rater 1'])
+            _rater_2 = (dataset[filter]['Rater 2'])
+            _rater_3 = (dataset[filter]['Rater 3'])
+            _rater_4 = (dataset[filter]['Rater 4'])        
+            _rater_5 = (dataset[filter]['Rater 5'])
+            _rater_6 = (dataset[filter]['Rater 6'])
+            index_rater = 0
+            index_rater = index_rater + setJudge(index_rater, _rater_1);
+            index_rater = index_rater + setJudge(index_rater, _rater_2);
+            index_rater = index_rater + setJudge(index_rater, _rater_3);
+            index_rater = index_rater + setJudge(index_rater, _rater_4);
+            index_rater = index_rater + setJudge(index_rater, _rater_5);
+            index_rater = index_rater + setJudge(index_rater, _rater_6);
+            rater = []
+            kappa = KappaStatistic();
+            #print("Player and Session: (%s,%s)" % (participant, session))
+            for i in range(2, index_rater + 1):
+                    c = list(itertools.combinations(range(0, index_rater), i))
+                    unq = set(c) 
+                    for tuple in (unq):  
+                                  
+                        rater = []
+                        names = [];
+                        for index in tuple:
+                            array = [ [x, y, z] for x, y, z in taskdata if x == str(index)]                                                 
+                            for element in array:                    
+                                rater.append(element)
+                        print(rater)
+                        resp = kappa.getKappa(rater)
+                        #print("Raters (Kappa = %.2f): %s " % (resp, str(tuple))) 
+                        if(resp >= 0.6):   
+                            lst.append(resp)                         
+                            print("Raters (Kappa = %.2f): %s " % (resp, str(tuple))) 
+                            
+        except: print("ERRO")
+    print("Mean %s " % (np.mean(lst)))
 

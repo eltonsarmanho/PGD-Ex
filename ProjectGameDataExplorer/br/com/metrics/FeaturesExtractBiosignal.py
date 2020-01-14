@@ -36,7 +36,7 @@ class FeaturesExtractBiosignal(object):
         # Loading Dataset
         self.dataset = pd.read_csv("/home/elton/Desktop/datasetValidacao.csv", sep=',') 
         P = [30,31,32,33,34,35,36,37,41,42,43,44,45,46,47,48,49,50,51]
-        P = 51
+        P = 30
         array = [1,2,3, 4]
         _UT = UnixTime()
         for session  in array:
@@ -64,9 +64,9 @@ class FeaturesExtractBiosignal(object):
             data = pd.read_csv(self.PATH_EMOTION_FACE) 
             data = data[(data['Session'] == session) & (data['Player'] == participant) & 
                         ((data['Time'] >= float(auxi)) & (data['Time'] <= float(auxf)))]
+            print(data['Time'].iloc[-1])
             startTime = data['Time'].iloc[0]
             sampleRate = 30
-            # data = data['NegativeEmotion']
             data_emotion = EvenlySignal(values=data[typeEmotion],
                    sampling_freq=sampleRate,
                    signal_type=typeEmotion,
@@ -74,6 +74,7 @@ class FeaturesExtractBiosignal(object):
            
             print("Duration Emotion (Session %s) %s: %s: " % (session, typeEmotion, data_emotion.get_duration()))
             print("Start Time: %s" % (startTime))
+            print("End Time: %s" % (data_emotion.get_end_time()))
             # print("End Time: %s " % (data['Time'][len(data['Time'])-1]))
             # print("End Time: %s " % (auxf)) 
             # Filtering
@@ -83,7 +84,7 @@ class FeaturesExtractBiosignal(object):
             data_emotion.plot()   
             plt.title("Emotion of the Player {} in Session {} ".format(participant, session))
             plt.savefig('/home/elton/Pictures/Resultados/Emotion/{}{}_S{}.png'.format(typeEmotion, participant, session), dpi=600)
-            # plt.show()
+            plt.show()
             plt.close()
             
             # ,,ph.Min,ph.StDev,ph.Range,ph.Median
@@ -120,9 +121,8 @@ class FeaturesExtractBiosignal(object):
             self.PATH_BVP = '/home/elton/Documents/Experimento/Validacao/Participante {}/BVP.csv'.format(participant)
             data = pd.read_csv(self.PATH_BVP)            
             startTime = float(data.columns.values[0])
-            print("startTime: %s" % (startTime))
+            
             sampleRate = float(data.iloc[0][0])
-            print("sampleRate: %s" % (sampleRate))
             data = data[data.index != 0]
             data.index = data.index - 1 
             data = [row[0] for row in data.values]
@@ -137,12 +137,17 @@ class FeaturesExtractBiosignal(object):
             # Select area of interest             
             bvp = bvp.segment_time(auxi, auxf)
             print("Duration of BVP (Session %s): %s" % (session, bvp.get_duration()))
+            print("startTime: %s" % (startTime))
+            print("sampleRate: %s" % (sampleRate))
+
             ibi = est.BeatFromBP()(bvp)
             
             ax1 = plt.subplot(211)
             ibi.plot()   
             plt.subplot(212)
             bvp.plot()
+            plt.grid(b=None)
+            plt.show()
             plt.savefig('/home/elton/Pictures/Resultados/BVP/BVP{}_S{}.png'.format(participant, session), dpi=600)
             plt.close()
             
@@ -150,13 +155,11 @@ class FeaturesExtractBiosignal(object):
             # ibi = ph.FixIBI(id_bad_ibi)(ibi)
             fixed_length = ph.FixedSegments(step=10, width=10)       
             TD_HRV_ind, col_names = ph.fmap(fixed_length, ph.preset_hrv_td(), ibi)
-            # col_names[2] = 'LabelBVP'
             TD_HRV_ind_df = pd.DataFrame(TD_HRV_ind, columns=col_names)
             TD_HRV_ind_df = TD_HRV_ind_df.drop('begin', 1)
             TD_HRV_ind_df = TD_HRV_ind_df.drop('end', 1)
             TD_HRV_ind_df = TD_HRV_ind_df.drop('label', 1)
-            # url = '/home/eltonss/Desktop/Resultados/MetricsBVP.csv'
-            # TD_HRV_ind_df.to_csv(url)
+        
             col_names = col_names.tolist()
             col_names.remove('begin')
             col_names.remove('end')
@@ -209,8 +212,10 @@ class FeaturesExtractBiosignal(object):
             phasic, tonic, _ = ph.PhasicEstim(delta=0.02)(driver)
             ax1 = plt.subplot(211)
             eda.plot()   
+            plt.grid(b=None)
             plt.subplot(212)             
-            phasic.plot()
+            phasic.plot()            
+            plt.show()
             plt.savefig('/home/elton/Pictures/Resultados/EDA/edaP{}_S{}.png'.format(participant, session), dpi=600)
             plt.close()
             pd.options.display.float_format = '{:.2f}'.format
