@@ -4,7 +4,7 @@ import glob
 
 import numpy as np
 import pandas as pd
-from br.com.util.E3Data import E3Data
+from ProjectGameDataExplorer.br.com.util.E3Data import E3Data
 
 
 class SourceData:

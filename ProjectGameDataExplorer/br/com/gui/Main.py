@@ -1102,14 +1102,14 @@ class FlowChartGame(QMainWindow):
         normalize_data_hr = self.ProcessingData().normalize(HR_DF['hr'])
         plotHR.setData(x=segmente_timeHR, y=normalize_data_hr.tolist())
         
-        plotHR = pwHR.plot(title="HRV", pen='b')
-        if(not self.isCreatedPlotHR):
-            pwHR.addItem(pg.PlotDataItem(pen='b', name='HRV Value', antialias=False))
-       
-        timeHRV = HRV_DF['Timestamp'].tolist()
-        normalize_data_hrv = self.ProcessingData().normalize(HRV_DF['HRV'])
-        plotHR.setData(x=timeHRV, y=normalize_data_hrv.tolist())
-       
+#         plotHR = pwHR.plot(title="HRV", pen='b')
+#         if(not self.isCreatedPlotHR):
+#             pwHR.addItem(pg.PlotDataItem(pen='b', name='HRV Value', antialias=False))
+#        
+#         timeHRV = HRV_DF['Timestamp'].tolist()
+#         normalize_data_hrv = self.ProcessingData().normalize(HRV_DF['HRV'])
+#         plotHR.setData(x=timeHRV, y=normalize_data_hrv.tolist())
+        timeHRV =  segmente_timeHR
         self.lrHR = pg.LinearRegionItem([timeHRV[0], timeHRV[len(timeHRV) - 1]],
                                         bounds=[timeHRV[0], timeHRV[len(timeHRV) - 1]])  
         self.lrHR.setZValue(-10)  

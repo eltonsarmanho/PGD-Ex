@@ -8,7 +8,6 @@ import sys
 
 from pyphysio import EvenlySignal
 
-from br.com.util.UnixTime import UnixTime
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -16,7 +15,7 @@ import pyphysio as ph
 import pyphysio.estimators.Estimators as est
 import pyphysio.filters.Filters as flt
 import math
-
+from sklearn.preprocessing import Imputer
 # import the Signal classes
 # import data from included examples
 # create a signal
@@ -27,39 +26,52 @@ class FeaturesExtractBiosignal(object):
     '''
 
     def __init__(self):
-        '''
-        Constructor
-        '''
+        self.path = "/media/elton/Backup/ColetaDados/Validacao/"
 
     def processingMetrics(self):
         
         # Loading Dataset
-        self.dataset = pd.read_csv("/home/elton/Desktop/datasetValidacao.csv", sep=',') 
-        P = [30,31,32,33,34,35,36,37,41,42,43,44,45,46,47,48,49,50,51]
-        P = 30
-        array = [1,2,3, 4]
-        _UT = UnixTime()
-        for session  in array:
-            filter = ((self.dataset['Player'] == P) & 
-                          (self.dataset['Session'] == session));
-            auxi = float(np.min(self.dataset[filter]['Interval Initial']))
-            auxf = float(np.max(self.dataset[filter]['Interval Final']))
-            if(math.isnan(auxi)):
-                continue
-            df_NegativeEmotion = self.processingMetricFaceEmotion(auxi, auxf, P, session, 'NegativeEmotion')
-            df_PostiveEmotion = self.processingMetricFaceEmotion(auxi, auxf, P, session, 'PositiveEmotion')
+        self.dataset = pd.read_csv("/home/elton/Desktop/Dataset/dataset.csv", sep=',') 
+        #dataset_validation = [30,31,32,33,34,35,36,37,41,42,43,44,45,46,47,48,49,50,51]
+        dataset_train = [3, 4, 5, 6, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 23, 24, 25, 26, 27, 28, 29, 30, 37, 43, 45, 47]
+        Players_test =  [31,32,33,34,35,36,41,42,44,48,49,50,51]
+        #Tem Player 2
+        participant = 46
+        sessions = [1,3,4]
+        for session  in sessions:
+            filter = ((self.dataset['Player'] == participant) & (self.dataset['Session'] == session));
+            time_initial_session = np.min(self.dataset[filter]['Interval Initial'])
+            time_final_session = np.max(self.dataset[filter]['Interval Final'])
+            #if(math.isnan(auxi)):
+            #    continue
+            df_NegativeEmotion = self.processingMetricFaceEmotion(time_initial_session, time_final_session, participant, session, 'NegativeEmotion')
+            df_PostiveEmotion = self.processingMetricFaceEmotion(time_initial_session, time_final_session, participant, session, 'PositiveEmotion')
 
-            df_BVP = self.processingMetricBVP(auxi, auxf, P, session)          
-            df_EDA = self.processingMetricEDA(auxi, auxf, P, session)
+            df_BVP = self.processingMetricBVP(time_initial_session, time_final_session,participant, session)
+            #df_BVP = self.runImputer(df_BVP)         
+            
+            df_EDA = self.processingMetricEDA(time_initial_session, time_final_session, participant, session)
+            #print(df_EDA[:18])
+            #df_EDA = self.runImputer(df_EDA)      
+            
             df = df_NegativeEmotion.join(df_PostiveEmotion).join(df_EDA).join((df_BVP))
-            url = '/home/elton/Desktop/Resultados/MetricsP{}_S{}.csv'.format(P, session)
+            df = self.runImputer(df)
+            url = '/home/elton/Desktop/Dataset/Resultados/MetricsP{}_S{}.csv'.format(participant, session)
            
             df.to_csv(url)
-
+            
+    def runImputer(self,DF):
+        
+        fill_NaN = Imputer(missing_values=np.nan, strategy='mean', axis=0)
+        fill_NaN.fit(DF)
+        imputed_DF = pd.DataFrame(fill_NaN.fit_transform(DF).round(2))
+        imputed_DF.columns = DF.columns
+        imputed_DF.index = DF.index
+        return imputed_DF;
     def processingMetricFaceEmotion(self, auxi, auxf, participant, session, typeEmotion):
            
         # try:
-            self.PATH_EMOTION_FACE = '/home/elton/Desktop/MetricsEmotion.csv'
+            self.PATH_EMOTION_FACE = '/home/elton/Desktop/Dataset/MetricsEmotion.csv'
             
             data = pd.read_csv(self.PATH_EMOTION_FACE) 
             data = data[(data['Session'] == session) & (data['Player'] == participant) & 
@@ -81,11 +93,11 @@ class FeaturesExtractBiosignal(object):
             data_emotion = flt.Normalize('maxmin')(data_emotion)
             # Select area of interest
             
-            data_emotion.plot()   
-            plt.title("Emotion of the Player {} in Session {} ".format(participant, session))
-            plt.savefig('/home/elton/Pictures/Resultados/Emotion/{}{}_S{}.png'.format(typeEmotion, participant, session), dpi=600)
-            plt.show()
-            plt.close()
+            #data_emotion.plot()   
+            #plt.title("Emotion of the Player {} in Session {} ".format(participant, session))
+            #plt.savefig('/home/elton/Pictures/Resultados/Emotion/{}{}_S{}.png'.format(typeEmotion, participant, session), dpi=600)
+            #plt.show()
+            #plt.close()
             
             # ,,ph.Min,ph.StDev,ph.Range,ph.Median
             fixed_length = ph.FixedSegments(step=10, width=10)  
@@ -118,7 +130,8 @@ class FeaturesExtractBiosignal(object):
         
         try:
         # loading BVP
-            self.PATH_BVP = '/home/elton/Documents/Experimento/Validacao/Participante {}/BVP.csv'.format(participant)
+            self.PATH_BVP =  self.path+'Participante {}/BVP.csv'.format(participant)
+            
             data = pd.read_csv(self.PATH_BVP)            
             startTime = float(data.columns.values[0])
             
@@ -142,14 +155,14 @@ class FeaturesExtractBiosignal(object):
 
             ibi = est.BeatFromBP()(bvp)
             
-            ax1 = plt.subplot(211)
-            ibi.plot()   
-            plt.subplot(212)
-            bvp.plot()
-            plt.grid(b=None)
-            plt.show()
-            plt.savefig('/home/elton/Pictures/Resultados/BVP/BVP{}_S{}.png'.format(participant, session), dpi=600)
-            plt.close()
+#             ax1 = plt.subplot(211)
+#             ibi.plot()   
+#             plt.subplot(212)
+#             bvp.plot()
+#             plt.grid(b=None)
+#             plt.show()
+#             plt.savefig('/home/elton/Pictures/Resultados/BVP/BVP{}_S{}.png'.format(participant, session), dpi=600)
+#             plt.close()
             
             # id_bad_ibi = ph.BeatOutliers(cache=3, sensitivity=0.25)(ibi)
             # ibi = ph.FixIBI(id_bad_ibi)(ibi)
@@ -159,11 +172,15 @@ class FeaturesExtractBiosignal(object):
             TD_HRV_ind_df = TD_HRV_ind_df.drop('begin', 1)
             TD_HRV_ind_df = TD_HRV_ind_df.drop('end', 1)
             TD_HRV_ind_df = TD_HRV_ind_df.drop('label', 1)
+            TD_HRV_ind_df = TD_HRV_ind_df.drop('IBI_DFA1', 1)
+            TD_HRV_ind_df = TD_HRV_ind_df.drop('IBI_DFA2', 1)
         
             col_names = col_names.tolist()
             col_names.remove('begin')
             col_names.remove('end')
             col_names.remove('label')
+            col_names.remove('IBI_DFA1')
+            col_names.remove('IBI_DFA2')
             for col in col_names :
                 aux = []
                 for value in TD_HRV_ind_df[col]:
@@ -177,7 +194,8 @@ class FeaturesExtractBiosignal(object):
         
     def processingMetricEDA(self, auxi, auxf, participant, session):
         print("processingMetricEDA")     
-        self.PATH_EDA = '/home/elton/Documents/Experimento/Validacao/Participante {}/EDA.csv'.format(participant)
+        
+        self.PATH_EDA = self.path+'Participante {}/EDA.csv'.format(participant)
         try:
                 # loading EDA
             data = pd.read_csv(self.PATH_EDA)            
@@ -210,16 +228,18 @@ class FeaturesExtractBiosignal(object):
             driver = ph.DriverEstim()(eda)                  
             
             phasic, tonic, _ = ph.PhasicEstim(delta=0.02)(driver)
-            ax1 = plt.subplot(211)
-            eda.plot()   
-            plt.grid(b=None)
-            plt.subplot(212)             
-            phasic.plot()            
-            plt.show()
-            plt.savefig('/home/elton/Pictures/Resultados/EDA/edaP{}_S{}.png'.format(participant, session), dpi=600)
-            plt.close()
-            pd.options.display.float_format = '{:.2f}'.format
+            
+#             ax1 = plt.subplot(211)
+#             eda.plot()   
+#             plt.grid(b=None)
+#             plt.subplot(212)             
+#             phasic.plot()            
+#             plt.show()
+#             plt.savefig('/home/elton/Pictures/Resultados/EDA/edaP{}_S{}.png'.format(participant, session), dpi=600)
+#             plt.close()
+#             pd.options.display.float_format = '{:.2f}'.format
             # fixed length windowing
+            
             fixed_length = ph.FixedSegments(step=10, width=10)       
             # we use the preset indicators for the phasic signal.
             # We need to define the minimum amplitude of the peaks that will be considered

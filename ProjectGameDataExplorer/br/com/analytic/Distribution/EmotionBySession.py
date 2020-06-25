@@ -17,7 +17,7 @@ import numpy as np
 import pandas as pd
 import pyphysio.filters.Filters as flt
 import seaborn as sns
-from br.com.util.SourceData import SourceData
+from ProjectGameDataExplorer.br.com.util import SourceData
 
 __all__ = ['QRangeSlider']
 
