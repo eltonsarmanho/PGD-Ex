@@ -19,6 +19,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
+from sklearn.ensemble.forest import RandomForestClassifier
+from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
+from sklearn.ensemble.weight_boosting import AdaBoostClassifier
+from sklearn.tree.tree import DecisionTreeClassifier
+from sklearn.ensemble.gradient_boosting import GradientBoostingClassifier
 
 
 def showPlot(df):
@@ -55,67 +60,6 @@ def runUnivariateSelection(X,y,score_func=f_classif,n_features=5):
         return cols;
 
 def executePipelineMain(X,y):
-    #Todas features = Face+ EDA+ BVP
-    #Best knn : 0.593407 using {'classify__n_neighbors': 4, 'classify__weights': 'uniform', 'reduce_dim': KernelPCA(alpha=1.0, coef0=1, copy_X=True, degree=3, eigen_solver='auto',
-    #fit_inverse_transform=False, gamma=None, kernel='cosine',
-    # kernel_params=None, max_iter=None, n_components=15, n_jobs=None,
-    #random_state=None, remove_zero_eig=False, tol=0), 'reduce_dim__kernel': 'cosine', 'reduce_dim__n_components': 15}
-    #Best SVM : 0.615385 using {'classify__C': 100, 'classify__kernel': 'rbf', 'reduce_dim': KernelPCA(alpha=1.0, coef0=1, copy_X=True, degree=3, eigen_solver='auto',
-    #fit_inverse_transform=False, gamma=0.1, kernel='linear',
-    #kernel_params=None, max_iter=None, n_components=15, n_jobs=None,
-    #random_state=None, remove_zero_eig=False, tol=0), 'reduce_dim__n_components': 15}
-    #Best xgb : 0.593407 using {'classify__gamma': 0.01, 'classify__learning_rate': 0.1, 'classify__n_estimators': 200, 'reduce_dim': NMF(alpha=0.0, beta_loss='frobenius', init=None, l1_ratio=0.0, max_iter=200,
-    #n_components=15, random_state=None, shuffle=False, solver='cd',
-    #tol=0.0001, verbose=0), 'reduce_dim__l1_ratio': 0.0, 'reduce_dim__n_components': 15}
-    
-    ##Todas features = Face+ EDA
-    #Best SVM : 0.593407 using {'classify__C': 10, 'classify__kernel': 'rbf', 'reduce_dim': NMF(alpha=0.0, beta_loss='frobenius', init=None, l1_ratio=0.1, max_iter=200,
-    # 'reduce_dim__l1_ratio': 0.1, 'reduce_dim__n_components': 10}
-    #Todas features = Face+ BVP
-    #Best knn : 0.593407 using {'classify__n_neighbors': 7, 'classify__weights': 'distance', 'reduce_dim': NMF(alpha=0.0, beta_loss='frobenius', init=None, l1_ratio=0.5172413793103449,
-    #max_iter=200, n_components=20, random_state=None, shuffle=False,
-    #solver='cd', tol=0.0001, verbose=0), 'reduce_dim__l1_ratio': 0.5172413793103449, 'reduce_dim__n_components': 20}
-    #Best xgb : 0.582418 using {'classify__gamma': 0.0001, 'classify__learning_rate': 0.1, 'classify__n_estimators': 300, 'reduce_dim': NMF(alpha=0.0, beta_loss='frobenius', init=None, l1_ratio=0.9310344827586207,
-    #max_iter=200, n_components=20, random_state=None, shuffle=False,
-    #solver='cd', tol=0.0001, verbose=0), 'reduce_dim__l1_ratio': 0.9310344827586207, 'reduce_dim__n_components': 20}
-    
-    #Todas features = Face+ BVP
-    #Best SVM : 0.556777 using {'classify__C': 10, 'classify__kernel': 'rbf', 'reduce_dim': SelectKBest(k=20, score_func=<function f_classif at 0x7fa0bd4e1730>), 'reduce_dim__k': 20}
-    #Best knn : 0.567766 using {'classify__n_neighbors': 5, 'classify__weights': 'uniform', 'reduce_dim': KernelPCA(alpha=1.0, coef0=1, copy_X=True, degree=3, eigen_solver='auto',
-    #fit_inverse_transform=False, gamma=None, kernel='sigmoid',
-    #kernel_params=None, max_iter=None, n_components=10, n_jobs=None,
-    #random_state=None, remove_zero_eig=False, tol=0), 'reduce_dim__kernel': 'sigmoid', 'reduce_dim__n_components': 10}
-    #Best xgb : 0.582418 using {'classify__gamma': 0.0001, 'classify__learning_rate': 0.1, 'classify__n_estimators': 300, 'reduce_dim': NMF(alpha=0.0, beta_loss='frobenius', init=None, l1_ratio=0.9310344827586207,
-    #max_iter=200, n_components=20, random_state=None, shuffle=False,
-    #solver='cd', tol=0.0001, verbose=0), 'reduce_dim__l1_ratio': 0.9310344827586207, 'reduce_dim__n_components': 20}
-    
-    #Todas features = EDA+ BVP
-    #Best SVM : 0.560440 using {'classify__C': 1, 'classify__kernel': 'rbf', 'reduce_dim': KernelPCA(alpha=1.0, coef0=1, copy_X=True, degree=3, eigen_solver='auto',
-    # fit_inverse_transform=False, gamma=0.1, kernel='linear',
-    # kernel_params=None, max_iter=None, n_components=10, n_jobs=None,
-    #random_state=None, remove_zero_eig=False, tol=0), 'reduce_dim__n_components': 10}
-    
-    #Best knn : 0.575092 using {'classify__n_neighbors': 14, 'classify__weights': 'distance', 'reduce_dim': KernelPCA(alpha=1.0, coef0=1, copy_X=True, degree=3, eigen_solver='auto',
-    #fit_inverse_transform=False, gamma=None, kernel='poly',
-    #kernel_params=None, max_iter=None, n_components=15, n_jobs=None,
-    #random_state=None, remove_zero_eig=False, tol=0), 'reduce_dim__kernel': 'poly', 'reduce_dim__n_components': 15}
-    
-    #Best xgb : 0.531136 using {'classify__gamma': 0.001, 'classify__learning_rate': 0.1, 'classify__n_estimators': 50, 'reduce_dim': KernelPCA(alpha=1.0, coef0=1, copy_X=True, degree=3, eigen_solver='auto',
-    #fit_inverse_transform=False, gamma=None, kernel='poly',
-    #kernel_params=None, max_iter=None, n_components=10, n_jobs=None,
-    #random_state=None, remove_zero_eig=False, tol=0), 'reduce_dim__kernel': 'poly', 'reduce_dim__n_components': 10}
-    
-    #EDA ## 11 var
-    #Best xgb : 0.560440 using {'classify__gamma': 0.1, 'classify__learning_rate': 0.1, 'classify__n_estimators': 100, 'reduce_dim': NMF(alpha=0.0, beta_loss='frobenius', init=None, l1_ratio=0.0, max_iter=200,
-    #n_components=8, random_state=None, shuffle=False, solver='cd',
-    #tol=0.0001, verbose=0), 'reduce_dim__l1_ratio': 0.0, 'reduce_dim__n_components': 8}
-    #Best knn : 0.582418 using {'classify__n_neighbors': 7, 'classify__weights': 'distance', 'reduce_dim': NMF(alpha=0.0, beta_loss='frobenius', init=None, l1_ratio=0.0, max_iter=200,
-    #n_components=8, random_state=None, shuffle=False, solver='cd',
-    #tol=0.0001, verbose=0), 'reduce_dim__l1_ratio': 0.0, 'reduce_dim__n_components': 8}
-    #Best SVM : 0.582418 using {'classify__C': 10, 'classify__kernel': 'rbf', 'reduce_dim': KernelPCA(alpha=1.0, coef0=1, copy_X=True, degree=3, eigen_solver='auto',
-    #fit_inverse_transform=False, gamma=0.1, kernel='linear',
-    #kernel_params=None, max_iter=None, n_components=8, n_jobs=None,
-    #random_state=None, remove_zero_eig=False, tol=0), 'reduce_dim__n_components': 8}
     
     steps = [('kpca', KernelPCA(n_components=2,fit_inverse_transform=True, n_jobs=-1)), ('SVM', svm.SVC())]
     model = Pipeline(steps);
@@ -131,133 +75,179 @@ def executePipelineMain(X,y):
     
 def runPipeline(X,y):
     
-    N_FEATURES_OPTIONS = [10,15,20]#Sempre 3 var
-    N_FEATURES_OPTIONS = [2,5,8]#Sempre 3 var
+    #N_FEATURES_OPTIONS = [10,15,19,22]
+    N_FEATURES_OPTIONS = [3,5,7]#Usando FaCE ou EDA ou BVP
     
     kernelsPCA = ["linear" , "poly" , "rbf" , "sigmoid" , "cosine" ]
     #xgb
-    learning_rate =[0.1,0.01,0.001,0.0001]#Sempre 4 var
-    n_estimators=[50,100,200,300]#Sempre 4 var                      
-    gamma = [0.1,0.01,0.001,0.0001]#Sempre 4 var    
+    learning_rate =[0.1,0.01,0.001]
+    n_estimators=[100,200]                
+    gamma = [0.01,0.1]    
     #SVM
     kernels= ['linear','rbf', 'poly', 'sigmoid']
     C_OPTIONS = [1, 10, 100,1000]#Sempre 4 var
     #KNN
     k_range = list(range(3, 30))
     weight_options = ['uniform', 'distance']
-
-    classify = 'SVM'
-    classify = 'xgb'
-    classify = 'knn'
-
-    if(classify == 'SVM'):
-        pipe = Pipeline([
-                        
-                ('reduce_dim',None),
-                ('classify',svm.SVC(gamma='scale'))        
-    ])
-        param_grid = [
-        {
-            'reduce_dim': [SelectKBest(f_classif)],'reduce_dim__k':N_FEATURES_OPTIONS,
-            'classify__C': C_OPTIONS,'classify__kernel': kernels           
-        },
-        {            
-            'reduce_dim': [KernelPCA(gamma=0.1)],'reduce_dim__n_components': N_FEATURES_OPTIONS,
-            'classify__C': C_OPTIONS,'classify__kernel': kernels               
-        },
-        {
-            'reduce_dim': [NMF()],'reduce_dim__l1_ratio':[0.1],'reduce_dim__n_components': N_FEATURES_OPTIONS,
-            'classify__C': C_OPTIONS,'classify__kernel': kernels
-        }
-    ]
-    elif(classify == 'knn'):
-        pipe = Pipeline([        
-            ('reduce_dim',None),('classify',KNeighborsClassifier())
-        ])
-        param_grid = [
-        {            
-           'reduce_dim': [SelectKBest(f_classif)],'reduce_dim__k':N_FEATURES_OPTIONS,
-           'classify__n_neighbors':k_range ,'classify__weights':weight_options        
-        },
-        {            
-            'reduce_dim': [KernelPCA()],'reduce_dim__n_components': N_FEATURES_OPTIONS,'reduce_dim__kernel': kernelsPCA,           
-            'classify__n_neighbors':k_range ,'classify__weights':weight_options 
-        },
-        {
-            'reduce_dim': [NMF()],'reduce_dim__l1_ratio':np.linspace(0,1,30),'reduce_dim__n_components': N_FEATURES_OPTIONS,
-            'classify__n_neighbors':k_range ,'classify__weights':weight_options 
-        }
-    ]
-    else:    
-        pipe = Pipeline([        
-            ('reduce_dim',None),('classify',XGBClassifier(99))
-        ])
-        param_grid = [
-        {            
-           'reduce_dim': [SelectKBest(f_classif)],'reduce_dim__k':N_FEATURES_OPTIONS,
-           'classify__gamma':gamma ,'classify__learning_rate': learning_rate,'classify__n_estimators': n_estimators          
-        },
-        {            
-            'reduce_dim': [KernelPCA()],'reduce_dim__n_components': N_FEATURES_OPTIONS,'reduce_dim__kernel': kernelsPCA,           
-            'classify__gamma':gamma ,'classify__learning_rate': learning_rate,'classify__n_estimators': n_estimators
-        },
-        {
-            'reduce_dim': [NMF()],'reduce_dim__l1_ratio':np.linspace(0,1,30),'reduce_dim__n_components': N_FEATURES_OPTIONS,
-            'classify__gamma':gamma ,'classify__learning_rate': learning_rate,'classify__n_estimators': n_estimators
-        }
-    ]
-
-    X_train, X_test, y_train, y_test  = preprocessingData(X, y)
-    reducer_labels = ['SelectKBest','KernelPCA','NMF']#Equal instance of class
-    grid = GridSearchCV(pipe, n_jobs=1, param_grid=param_grid)   
-    grid.fit(X_train, y_train)
-    
-    print("Best %s : %f using %s" % (classify,grid.best_score_, grid.best_params_))
-  
-    means = grid.cv_results_['mean_test_score']
-    stds = grid.cv_results_['std_test_score']
-    params = grid.cv_results_['params']
-    
-    dict_reduce = defaultdict(dict)
-    dict_reduce_std = defaultdict(dict)
-    for reduce in reducer_labels:
-        for features in N_FEATURES_OPTIONS:
-            dict_reduce[reduce][str(features)] = 0
-            dict_reduce_std[reduce][str(features)] = 0
-    for mean, stdev, param in zip(means, stds, params):
-       
-        if('reduce_dim' in param):
-            #print("%f (%f) with: %r" % (mean, stdev, param))
-            if (isinstance(param['reduce_dim'], SelectKBest)):               
-                if(dict_reduce['SelectKBest'][str(param['reduce_dim__k'])] < mean):                
-                    dict_reduce['SelectKBest'][str(param['reduce_dim__k'])] = mean
-                    dict_reduce_std['SelectKBest'][str(param['reduce_dim__k'])] = stdev
-            elif (isinstance(param['reduce_dim'], KernelPCA)):
-                if(dict_reduce['KernelPCA'][str(param['reduce_dim__n_components'])] < mean):                
-                    dict_reduce['KernelPCA'][str(param['reduce_dim__n_components'])] = mean
-                    dict_reduce_std['KernelPCA'][str(param['reduce_dim__n_components'])] = stdev
-            elif (isinstance(param['reduce_dim'], NMF)):
-                if(dict_reduce['NMF'][str(param['reduce_dim__n_components'])] < mean):                
-                    dict_reduce['NMF'][str(param['reduce_dim__n_components'])] = mean
-                    dict_reduce_std['NMF'][str(param['reduce_dim__n_components'])] = stdev
-       
-    bar_offsets = (np.arange(len(N_FEATURES_OPTIONS)) *
-                   (len(reducer_labels) + 1) + .5)
-    
-    plt.figure()
-    COLORS = 'bgrcmyk'
-    for i, (label) in enumerate(reducer_labels):
-        plt.bar(bar_offsets+i, dict_reduce[label].values(), yerr=dict_reduce_std[label].values() ,label=label, color=COLORS[i])
         
+    classifiers = ['SVM','xgb','knn','Gradient Boosting','AdaBoost']
+    for classify in classifiers:
     
-    plt.title("Comparing feature reduction techniques with "+classify)
-    plt.xlabel('Reduced number of features')
-    plt.xticks(bar_offsets + len(reducer_labels) / 2, N_FEATURES_OPTIONS)
-    plt.ylabel('classification accuracy')
-    plt.ylim((0, 1))
-    plt.legend(loc='upper left')
+        if(classify == 'SVM'):
+            pipe = Pipeline([
+                            
+                    ('reduce_dim',None),
+                    ('classify',svm.SVC(gamma='scale'))        
+        ])
+            param_grid = [
+            {
+                'reduce_dim': [SelectKBest(f_classif)],'reduce_dim__k':N_FEATURES_OPTIONS,
+                'classify__C': C_OPTIONS,'classify__kernel': kernels           
+            },
+            {            
+                'reduce_dim': [KernelPCA(gamma=0.1)],'reduce_dim__n_components': N_FEATURES_OPTIONS,
+                'classify__C': C_OPTIONS,'classify__kernel': kernels               
+            },
+            {
+                'reduce_dim': [NMF()],'reduce_dim__l1_ratio':[0.1],'reduce_dim__n_components': N_FEATURES_OPTIONS,
+                'classify__C': C_OPTIONS,'classify__kernel': kernels
+            }
+        ]
+        elif(classify == 'AdaBoost'):
+            pipe = Pipeline([        
+                ('reduce_dim',None),('classify',AdaBoostClassifier(svm.SVC(gamma='scale'),
+                         algorithm="SAMME",
+                         n_estimators=200))
+            ])
+            param_grid = [
+            {            
+               'reduce_dim': [SelectKBest(f_classif)],'reduce_dim__k':N_FEATURES_OPTIONS,
+               
+            },
+            {            
+                'reduce_dim': [KernelPCA()],'reduce_dim__n_components': N_FEATURES_OPTIONS,'reduce_dim__kernel': kernelsPCA,           
+                
+            },
+            {
+                'reduce_dim': [NMF()],'reduce_dim__l1_ratio':np.linspace(0,1,30),'reduce_dim__n_components': N_FEATURES_OPTIONS,
+                 
+            }
+        ]    
+        elif(classify == 'Gradient Boosting'):
+            pipe = Pipeline([        
+                ('reduce_dim',None),('classify',GradientBoostingClassifier(learning_rate=0.1,
+                                                                            n_estimators=60,max_depth=9,
+                                                                            max_features='sqrt', subsample=0.8, random_state=10))
+            ])
+            param_grid = [
+            {            
+               'reduce_dim': [SelectKBest(f_classif)],'reduce_dim__k':N_FEATURES_OPTIONS,
+               'classify__max_depth':[2,3,4,5,],
+               'classify__learning_rate': [0.01, 0.1, 0.001],'classify__n_estimators':  n_estimators    
+            },
+            {            
+                'reduce_dim': [KernelPCA()],'reduce_dim__n_components': N_FEATURES_OPTIONS,'reduce_dim__kernel': kernelsPCA,
+                'classify__max_depth':[2,3,4,5],
+                'classify__learning_rate': [0.01, 0.1, 0.001],'classify__n_estimators':  n_estimators           
+            },
+            {
+                'reduce_dim': [NMF()],'reduce_dim__l1_ratio':np.linspace(0,1,30),'reduce_dim__n_components': N_FEATURES_OPTIONS,
+                'classify__max_depth':[2,3,4,5],
+                'classify__learning_rate': [0.01,  0.1, 0.001],'classify__n_estimators':  n_estimators  
+            }
+        ]
+        elif(classify == 'knn'):
+            pipe = Pipeline([        
+                ('reduce_dim',None),('classify',KNeighborsClassifier())
+            ])
+            param_grid = [
+            {            
+               'reduce_dim': [SelectKBest(f_classif)],'reduce_dim__k':N_FEATURES_OPTIONS,
+               'classify__n_neighbors':k_range ,'classify__weights':weight_options        
+            },
+            {            
+                'reduce_dim': [KernelPCA()],'reduce_dim__n_components': N_FEATURES_OPTIONS,'reduce_dim__kernel': kernelsPCA,           
+                'classify__n_neighbors':k_range ,'classify__weights':weight_options 
+            },
+            {
+                'reduce_dim': [NMF()],'reduce_dim__l1_ratio':np.linspace(0,1,30),'reduce_dim__n_components': N_FEATURES_OPTIONS,
+                'classify__n_neighbors':k_range ,'classify__weights':weight_options 
+            }
+        ]
+        else:    
+            pipe = Pipeline([        
+                ('reduce_dim',None),('classify',XGBClassifier(99))
+            ])
+            param_grid = [
+            {            
+               'reduce_dim': [SelectKBest(f_classif)],'reduce_dim__k':N_FEATURES_OPTIONS,
+               'classify__gamma':gamma ,'classify__learning_rate': learning_rate,'classify__n_estimators': n_estimators          
+            },
+            {            
+                'reduce_dim': [KernelPCA()],'reduce_dim__n_components': N_FEATURES_OPTIONS,'reduce_dim__kernel': kernelsPCA,           
+                'classify__gamma':gamma ,'classify__learning_rate': learning_rate,'classify__n_estimators': n_estimators
+            },
+            {
+                'reduce_dim': [NMF()],'reduce_dim__l1_ratio':np.linspace(0,1,30),'reduce_dim__n_components': N_FEATURES_OPTIONS,
+                'classify__gamma':gamma ,'classify__learning_rate': learning_rate,'classify__n_estimators': n_estimators
+            }
+        ]
     
-    plt.show()
+        X_train, X_test, y_train, y_test  = preprocessingData(X, y)
+        reducer_labels = ['SelectKBest','KernelPCA','NMF']#Equal instance of class
+        grid = GridSearchCV(pipe, n_jobs=1, param_grid=param_grid)   
+        grid.fit(X_train, y_train)
+        
+        print("Best %s : %f using %s" % (classify,grid.best_score_, grid.best_params_))
+      
+        means = grid.cv_results_['mean_test_score']
+        stds = grid.cv_results_['std_test_score']
+        params = grid.cv_results_['params']
+        
+        dict_reduce = defaultdict(dict)
+        dict_reduce_std = defaultdict(dict)
+        for reduce in reducer_labels:
+            for features in N_FEATURES_OPTIONS:
+                dict_reduce[reduce][str(features)] = 0
+                dict_reduce_std[reduce][str(features)] = 0
+        for mean, stdev, param in zip(means, stds, params):
+           
+            if('reduce_dim' in param):
+                #print("%f (%f) with: %r" % (mean, stdev, param))
+                if (isinstance(param['reduce_dim'], SelectKBest)):               
+                    if(dict_reduce['SelectKBest'][str(param['reduce_dim__k'])] < mean):                
+                        dict_reduce['SelectKBest'][str(param['reduce_dim__k'])] = mean
+                        dict_reduce_std['SelectKBest'][str(param['reduce_dim__k'])] = stdev
+                elif (isinstance(param['reduce_dim'], KernelPCA)):
+                    if(dict_reduce['KernelPCA'][str(param['reduce_dim__n_components'])] < mean):                
+                        dict_reduce['KernelPCA'][str(param['reduce_dim__n_components'])] = mean
+                        dict_reduce_std['KernelPCA'][str(param['reduce_dim__n_components'])] = stdev
+                elif (isinstance(param['reduce_dim'], NMF)):
+                    if(dict_reduce['NMF'][str(param['reduce_dim__n_components'])] < mean):                
+                        dict_reduce['NMF'][str(param['reduce_dim__n_components'])] = mean
+                        dict_reduce_std['NMF'][str(param['reduce_dim__n_components'])] = stdev
+           
+        bar_offsets = (np.arange(len(N_FEATURES_OPTIONS)) *
+                       (len(reducer_labels) + 1) + .5)
+        
+        plt.figure()
+        COLORS = 'bgrcmyk'
+        for i, (label) in enumerate(reducer_labels):
+            
+            bar = plt.bar(bar_offsets+i, dict_reduce[label].values(), yerr=dict_reduce_std[label].values() ,label=label, color=COLORS[i])
+            for index,numeric_label in enumerate(dict_reduce[label].values()):
+                         
+                plt.text(x = (bar_offsets[index]-0.15)+i, y =float(numeric_label)+0.02, s = (np.round(numeric_label,2)), size = 6)
+
+        
+        plt.title("Comparing feature reduction techniques with "+classify)
+        plt.xlabel('Reduced number of features')
+        plt.xticks(bar_offsets + len(reducer_labels) / 2, N_FEATURES_OPTIONS)
+        plt.ylabel('classification accuracy')
+        plt.ylim((0, 1))
+        plt.legend(loc='upper left')
+        plt.savefig("/home/elton/Pictures/Resultados/Classificador/{0}_{1}.png".format(classify,'EDA'))
+        #plt.show()
 
 
 
@@ -329,8 +319,6 @@ def xgbc_classification(X,y):
     return preds, xg_cl, y_test
 
 
-
-
 def preprocessingData(X,y):
         
         #X = preprocessing.StandardScaler().fit(X).transform(X.astype(float))
@@ -352,11 +340,13 @@ dataset = dataset[dataset['Player'].isin(dataset_train)]
 filter = dataset['Experience'].isin(['Negative','Neutral','Positive'])
 dataset = dataset[filter]
 
-
+#10 Faces
+#10 EDA
+#14 BVP
 features_remove =['Player','Session','Interval Initial','Interval Final','Event','Rater 1','Rater 2','Rater 3','Rater 4','Rater 5','Rater 6',
                  'NegativeEmotion_maximum','NegativeEmotion_minimum','NegativeEmotion_sd','PositiveEmotion_maximum','PositiveEmotion_minimum','PositiveEmotion_sd','NegativeEmotion_mean','NegativeEmotion_range','PositiveEmotion_mean','PositiveEmotion_range',                  
                  #'pha_StDev','pha_PeaksMax','pha_DurationMean','pha_PeaksMin','pha_SlopeMean','pha_AUC','pha_Mean','pha_Range','pha_PeaksMean','pha_PeaksNum',
-                  'IBI_Min','IBI_Max','IBI_pnn10','IBI_Median','IBI_pnn25','IBI_pnn50','IBI_sd12','IBI_sdell','IBI_sd1','IBI_sd2','IBI_RMSSD', 'IBI_Mean','IBI_RRstd','IBI_SDSD'
+                 'IBI_Min','IBI_Max','IBI_pnn10','IBI_Median','IBI_pnn25','IBI_pnn50','IBI_sd12','IBI_sdell','IBI_sd1','IBI_sd2','IBI_RMSSD', 'IBI_Mean','IBI_RRstd','IBI_SDSD'
                   ]
   
 df = dataset.copy().drop(features_remove, axis = 1)
@@ -372,3 +362,20 @@ y = np.asarray(Y)
 X = np.asarray(df.copy().drop('Experience', 1))
 
 runPipeline(X,y)   
+
+classifiers = {
+        #"RandomForest": RandomForestClassifier(n_jobs=-1)
+        # "RandomForest": RandomForestClassifier(n_estimators=5),
+        # "KNeighbors":KNeighborsClassifier(3),
+        # "GaussianProcess":GaussianProcessClassifier(1.0 * RBF(1.0), warm_start=True),
+        # "DecisionTree":DecisionTreeClassifier(max_depth=5),
+        # "MLP":MLPClassifier(),
+        # "AdaBoost":AdaBoostClassifier(),
+        # "GaussianNB":GaussianNB(),
+        # "QDA":QuadraticDiscriminantAnalysis(),
+        # "SVM":SVC(kernel="linear", C=0.025),
+        # "GradientBoosting":GradientBoostingClassifier(),
+        # "ExtraTrees":ExtraTreesClassifier(),
+        # "LogisticRegression":LogisticRegression(),
+        # "LinearDiscriminantAnalysis":LinearDiscriminantAnalysis()
+    }
